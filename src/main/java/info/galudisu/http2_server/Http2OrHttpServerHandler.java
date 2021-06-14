@@ -16,7 +16,7 @@ public class Http2OrHttpServerHandler extends ApplicationProtocolNegotiationHand
   private static final int MAX_CONTENT_LENGTH = 1024 * 100;
 
   public Http2OrHttpServerHandler() {
-    super(ApplicationProtocolNames.HTTP_1_1);
+    super(ApplicationProtocolNames.HTTP_2);
   }
 
   @Override

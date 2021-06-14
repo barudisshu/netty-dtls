@@ -2,16 +2,13 @@ package io.netty.util.internal.resources.openssl;
 
 import io.netty.handler.codec.http2.Http2SecurityUtil;
 import io.netty.handler.ssl.*;
+import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
+import io.netty.handler.ssl.util.SelfSignedCertificate;
 
 import javax.net.ssl.SSLException;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.security.GeneralSecurityException;
-import java.security.PrivateKey;
 import java.security.cert.CertificateException;
-import java.security.cert.X509Certificate;
-import java.util.Collection;
-import java.util.List;
 
 /** SSLContext factory for handle client connection */
 public final class SSLContextFactory {
@@ -19,13 +16,13 @@ public final class SSLContextFactory {
   private SSLContextFactory() {}
 
   public static SslContext generateServerSslContext(
-      Collection<Path> caPaths, Path keyPath, String keyStorePass)
-      throws GeneralSecurityException, IOException {
-    PrivateKey privateKey = PemUtils.readPrivateKey(keyPath, keyStorePass::toCharArray);
-    List<X509Certificate> chain = PemUtils.readCertificates(caPaths);
-    return SslContextBuilder.forServer(privateKey, keyStorePass, chain)
+      Path caPath, Path certificatePath, Path privateKeyPath, String keyPassword)
+      throws SSLException {
+    return SslContextBuilder.forServer(
+            certificatePath.toFile(), privateKeyPath.toFile(), keyPassword)
         .sslProvider(SslProvider.OPENSSL)
         .ciphers(Http2SecurityUtil.CIPHERS, SupportedCipherSuiteFilter.INSTANCE)
+        .trustManager(caPath.toFile())
         .applicationProtocolConfig(
             new ApplicationProtocolConfig(
                 ApplicationProtocolConfig.Protocol.ALPN,
@@ -36,10 +33,11 @@ public final class SSLContextFactory {
         .build();
   }
 
-  public static SslContext generateServerSslContext(Path certificatePath, Path privateKeyPath) throws SSLException {
-    return SslContextBuilder.forServer(certificatePath.toFile(), privateKeyPath.toFile())
-        .clientAuth(ClientAuth.NONE)
-        .sslProvider(SslProvider.OPENSSL)
+  public static SslContext generateServerSslContext() throws CertificateException, SSLException {
+    SelfSignedCertificate ssc = new SelfSignedCertificate();
+    return SslContextBuilder.forServer(ssc.certificate(), ssc.privateKey())
+        .sslProvider(SslProvider.JDK)
+        .ciphers(Http2SecurityUtil.CIPHERS, SupportedCipherSuiteFilter.INSTANCE)
         .applicationProtocolConfig(
             new ApplicationProtocolConfig(
                 ApplicationProtocolConfig.Protocol.ALPN,
@@ -48,20 +46,31 @@ public final class SSLContextFactory {
                 ApplicationProtocolNames.HTTP_2,
                 ApplicationProtocolNames.HTTP_1_1))
         .build();
-
   }
 
   public static SslContext generateClientSslContext(
-      Collection<Path> caPaths, Collection<Path> certPaths, Path keyPath, String keyStorePass)
-      throws CertificateException, IOException {
-    List<X509Certificate> certificate = PemUtils.readCertificates(certPaths);
-    PrivateKey privateKey = PemUtils.readPrivateKey(keyPath, keyStorePass::toCharArray);
-    List<X509Certificate> chain = PemUtils.readCertificates(caPaths);
+      Path caPath, Path certificatePath, Path privateKeyPath, String keyPassword)
+      throws IOException {
     return SslContextBuilder.forClient()
         .sslProvider(SslProvider.OPENSSL)
         .ciphers(Http2SecurityUtil.CIPHERS, SupportedCipherSuiteFilter.INSTANCE)
-        .trustManager(chain)
-        .keyManager(privateKey, keyStorePass, certificate)
+        .trustManager(caPath.toFile())
+        .keyManager(certificatePath.toFile(), privateKeyPath.toFile(), keyPassword)
+        .applicationProtocolConfig(
+            new ApplicationProtocolConfig(
+                ApplicationProtocolConfig.Protocol.ALPN,
+                ApplicationProtocolConfig.SelectorFailureBehavior.NO_ADVERTISE,
+                ApplicationProtocolConfig.SelectedListenerFailureBehavior.ACCEPT,
+                ApplicationProtocolNames.HTTP_2,
+                ApplicationProtocolNames.HTTP_1_1))
+        .build();
+  }
+
+  public static SslContext generateClientSslContext() throws SSLException {
+    return SslContextBuilder.forClient()
+        .sslProvider(SslProvider.JDK)
+        .ciphers(Http2SecurityUtil.CIPHERS, SupportedCipherSuiteFilter.INSTANCE)
+        .trustManager(InsecureTrustManagerFactory.INSTANCE)
         .applicationProtocolConfig(
             new ApplicationProtocolConfig(
                 ApplicationProtocolConfig.Protocol.ALPN,

@@ -16,7 +16,7 @@ public class Http2OrHttpClientHandler extends ApplicationProtocolNegotiationHand
       HttpToHttp2ConnectionHandler connectionHandler,
       Http2SettingsHandler settingsHandler,
       HttpResponseHandler responseHandler) {
-    super(ApplicationProtocolNames.HTTP_1_1);
+    super(ApplicationProtocolNames.HTTP_2);
     this.connectionHandler = connectionHandler;
     this.settingsHandler = settingsHandler;
     this.responseHandler = responseHandler;

@@ -11,24 +11,20 @@ import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.codec.http.*;
-import io.netty.handler.codec.http2.Http2SecurityUtil;
 import io.netty.handler.codec.http2.HttpConversionUtil;
-import io.netty.handler.ssl.*;
-import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
+import io.netty.handler.ssl.SslContext;
 import io.netty.util.AsciiString;
 import io.netty.util.CharsetUtil;
-import io.netty.util.internal.resources.openssl.SSLContextFactory;
 import io.netty.util.internal.resources.platform.DefaultLoopNativeDetector;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.net.ssl.SSLException;
 import java.io.IOException;
-import java.security.GeneralSecurityException;
-import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
 import static io.netty.handler.codec.http.HttpMethod.GET;
 import static io.netty.handler.codec.http.HttpMethod.POST;
+import static io.netty.util.internal.resources.openssl.SSLContextFactory.generateClientSslContext;
 
 @Slf4j
 public class Client2Launch implements Launch {
@@ -140,15 +136,15 @@ public class Client2Launch implements Launch {
     if (SSL_SUPPORT) {
       try {
         sslCtx =
-            SSLContextFactory.generateClientSslContext(
-                Collections.singleton(getPath("openssl/ca.pem")),
-                Collections.singleton(getPath("openssl/server.pem")),
-                getPath("openssl/server.key"),
-                "ericsson");
+            generateClientSslContext(
+                getPath("openssl/ca.crt"),
+                getPath("openssl/client.crt"),
+                getPath("openssl/pkcs8_client.key"),
+                "client");
       } catch (SSLException e) {
         log.debug("no ssl certificate provided, rollback to http1");
-      } catch (GeneralSecurityException | IOException e) {
-        e.printStackTrace();
+      } catch (IOException e) {
+        log.debug("can not read certificate provided, rollback to http1");
       }
     }
     return sslCtx;
@@ -158,19 +154,7 @@ public class Client2Launch implements Launch {
     SslContext sslCtx = null;
     if (SSL_SUPPORT) {
       try {
-        sslCtx =
-            SslContextBuilder.forClient()
-                .sslProvider(SslProvider.JDK)
-                .ciphers(Http2SecurityUtil.CIPHERS, SupportedCipherSuiteFilter.INSTANCE)
-                .trustManager(InsecureTrustManagerFactory.INSTANCE)
-                .applicationProtocolConfig(
-                    new ApplicationProtocolConfig(
-                        ApplicationProtocolConfig.Protocol.ALPN,
-                        ApplicationProtocolConfig.SelectorFailureBehavior.NO_ADVERTISE,
-                        ApplicationProtocolConfig.SelectedListenerFailureBehavior.ACCEPT,
-                        ApplicationProtocolNames.HTTP_2,
-                        ApplicationProtocolNames.HTTP_1_1))
-                .build();
+        sslCtx = generateClientSslContext();
       } catch (SSLException e) {
         log.debug("no ssl certificate provided, rollback to http1", e);
       }

@@ -6,18 +6,17 @@ import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.socket.ServerSocketChannel;
-import io.netty.handler.codec.http2.Http2SecurityUtil;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
-import io.netty.handler.ssl.*;
-import io.netty.handler.ssl.util.SelfSignedCertificate;
-import io.netty.util.internal.resources.openssl.SSLContextFactory;
+import io.netty.handler.ssl.SslContext;
 import io.netty.util.internal.resources.platform.DefaultLoopNativeDetector;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.net.ssl.SSLException;
 import java.io.IOException;
 import java.security.cert.CertificateException;
+
+import static io.netty.util.internal.resources.openssl.SSLContextFactory.generateServerSslContext;
 
 /** @author Galudisu */
 @Slf4j
@@ -65,7 +64,11 @@ public class Http2Launch implements Launch {
     if (SSL_SUPPORT) {
       try {
         sslCtx =
-            SSLContextFactory.generateServerSslContext(getPath("openssl/server.pem"), getPath("openssl/server.key"));
+            generateServerSslContext(
+                getPath("openssl/ca.crt"),
+                getPath("openssl/server.crt"),
+                getPath("openssl/pkcs8_server.key"),
+                "server");
       } catch (SSLException e) {
         log.debug("no ssl certificate provided, rollback to http1");
       } catch (IOException e) {
@@ -80,19 +83,7 @@ public class Http2Launch implements Launch {
     SslContext sslCtx = null;
     if (SSL_SUPPORT) {
       try {
-        SelfSignedCertificate ssc = new SelfSignedCertificate();
-        sslCtx =
-            SslContextBuilder.forServer(ssc.certificate(), ssc.privateKey())
-                .sslProvider(SslProvider.JDK)
-                .ciphers(Http2SecurityUtil.CIPHERS, SupportedCipherSuiteFilter.INSTANCE)
-                .applicationProtocolConfig(
-                    new ApplicationProtocolConfig(
-                        ApplicationProtocolConfig.Protocol.ALPN,
-                        ApplicationProtocolConfig.SelectorFailureBehavior.NO_ADVERTISE,
-                        ApplicationProtocolConfig.SelectedListenerFailureBehavior.ACCEPT,
-                        ApplicationProtocolNames.HTTP_2,
-                        ApplicationProtocolNames.HTTP_1_1))
-                .build();
+        sslCtx = generateServerSslContext();
       } catch (CertificateException | SSLException e) { // NOSONAR
         log.debug("no ssl certificate provided, rollback to http1");
       }
