@@ -1,0 +1,83 @@
+package info.galudisu;
+
+import info.galudisu.udp_server.UdpChannelInitializer;
+import io.netty.bootstrap.Bootstrap;
+import io.netty.buffer.PooledByteBufAllocator;
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelOption;
+import io.netty.channel.EventLoopGroup;
+import io.netty.channel.socket.DatagramChannel;
+import io.netty.util.internal.resources.platform.DefaultLoopNativeDetector;
+import lombok.extern.slf4j.Slf4j;
+
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
+
+import static io.netty.channel.unix.UnixChannelOption.SO_REUSEPORT;
+import static io.netty.util.internal.resources.platform.DefaultLoopNativeDetector.IS_EPOLL_OPEN;
+
+/** @author Galudisu */
+@Slf4j
+public class UdpLaunch implements Launch {
+
+  private EventLoopGroup channelGroup;
+  private static final List<ChannelFuture> channelFutures = new CopyOnWriteArrayList<>();
+
+  public void createEventLoopGroup() {
+    channelGroup = createEventLoopGroup(true, CPU_CORE, "UDP-CHANNEL");
+  }
+
+  public void startServer() {
+    try {
+      final Bootstrap bootstrap = new Bootstrap();
+      bootstrap
+          .group(channelGroup)
+          .option(ChannelOption.SO_BROADCAST, true)
+          .option(ChannelOption.SO_REUSEADDR, true)
+          .option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
+          .channel(DefaultLoopNativeDetector.INSTANCE.getChannelClass(DatagramChannel.class))
+          .handler(new UdpChannelInitializer());
+
+      if (IS_EPOLL_OPEN) {
+        bootstrap.option(SO_REUSEPORT, true);
+        for (int i = 0; i < CPU_CORE; i++) {
+          ChannelFuture channelFuture = bootstrap.bind(1314).sync();
+          channelFutures.add(channelFuture);
+        }
+      } else {
+        ChannelFuture channelFuture = bootstrap.bind(1314).sync();
+        channelFutures.add(channelFuture);
+      }
+
+      log.info("http2 server start...");
+    } catch (InterruptedException e) {
+      log.error("http2 server error", e);
+      Thread.currentThread().interrupt();
+    }
+  }
+
+  public void closeChannel() {
+    try {
+      for (ChannelFuture channelFuture : channelFutures) {
+        channelFuture.channel().closeFuture().sync();
+      }
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+    }
+  }
+
+  public void shutdownGraceFully() {
+    channelGroup.shutdownGracefully();
+  }
+
+  public static void main(String[] args) {
+    UdpLaunch udpLaunch = new UdpLaunch();
+    try {
+      udpLaunch.createEventLoopGroup();
+      udpLaunch.startServer();
+      udpLaunch.closeChannel();
+    } finally {
+      udpLaunch.shutdownGraceFully();
+    }
+  }
+}
