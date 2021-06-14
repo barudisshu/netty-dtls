@@ -23,13 +23,6 @@ public final class SSLContextFactory {
         .sslProvider(SslProvider.OPENSSL)
         .ciphers(Http2SecurityUtil.CIPHERS, SupportedCipherSuiteFilter.INSTANCE)
         .trustManager(caPath.toFile())
-        .applicationProtocolConfig(
-            new ApplicationProtocolConfig(
-                ApplicationProtocolConfig.Protocol.ALPN,
-                ApplicationProtocolConfig.SelectorFailureBehavior.NO_ADVERTISE,
-                ApplicationProtocolConfig.SelectedListenerFailureBehavior.ACCEPT,
-                ApplicationProtocolNames.HTTP_2,
-                ApplicationProtocolNames.HTTP_1_1))
         .build();
   }
 

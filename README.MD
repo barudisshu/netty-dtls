@@ -36,15 +36,15 @@ openssl x509 -req -days 36500 -in client.csr -CA ca.crt -CAkey ca.key -CAcreates
 5.将 key 文件进行 PKCS#8 编码
 
 ```shell
-openssl pkcs8 -topk8 -in server.key -out pkcs8_server.key -nocrypt
-openssl pkcs8 -topk8 -in client.key -out pkcs8_client.key -nocrypt
+openssl pkcs8 -v1 "PBE-SHA1-3DES" -topk8 -in server.key -out pkcs8_server.key
+openssl pkcs8 -v1 "PBE-SHA1-3DES" -topk8 -in client.key -out pkcs8_client.key
 ```
 
 
 最后得到有用的文件分别为
 
-服务器端： ca.crt、server.crt、pkcs8_server.key
-客户端端： ca.crt、client.crt、pkcs8_client.key
+服务器端： ca.crt, server.crt, pkcs8_server.key
+客户端端： ca.crt, client.crt, pkcs8_client.key
 
 
 6. 查看命令

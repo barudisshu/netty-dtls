@@ -13,9 +13,7 @@ public final class PathUtils {
     throw new IllegalStateException("Utility class should not be instantiated");
   }
 
-  static final FileSystem ACTUAL_DEFAULT = FileSystems.getDefault();
-
-  static volatile FileSystem DEFAULT = ACTUAL_DEFAULT;
+  private static final FileSystem DEFAULT = FileSystems.getDefault();
 
   public static Path get(String first, String... more) {
     return DEFAULT.getPath(first, more);
