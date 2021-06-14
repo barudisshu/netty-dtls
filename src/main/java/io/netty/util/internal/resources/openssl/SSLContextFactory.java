@@ -3,6 +3,7 @@ package io.netty.util.internal.resources.openssl;
 import io.netty.handler.codec.http2.Http2SecurityUtil;
 import io.netty.handler.ssl.*;
 
+import javax.net.ssl.SSLException;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.security.GeneralSecurityException;
@@ -33,6 +34,21 @@ public final class SSLContextFactory {
                 ApplicationProtocolNames.HTTP_2,
                 ApplicationProtocolNames.HTTP_1_1))
         .build();
+  }
+
+  public static SslContext generateServerSslContext(Path certificatePath, Path privateKeyPath) throws SSLException {
+    return SslContextBuilder.forServer(certificatePath.toFile(), privateKeyPath.toFile())
+        .clientAuth(ClientAuth.NONE)
+        .sslProvider(SslProvider.OPENSSL)
+        .applicationProtocolConfig(
+            new ApplicationProtocolConfig(
+                ApplicationProtocolConfig.Protocol.ALPN,
+                ApplicationProtocolConfig.SelectorFailureBehavior.NO_ADVERTISE,
+                ApplicationProtocolConfig.SelectedListenerFailureBehavior.ACCEPT,
+                ApplicationProtocolNames.HTTP_2,
+                ApplicationProtocolNames.HTTP_1_1))
+        .build();
+
   }
 
   public static SslContext generateClientSslContext(

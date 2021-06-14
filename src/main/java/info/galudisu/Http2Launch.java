@@ -17,9 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.net.ssl.SSLException;
 import java.io.IOException;
-import java.security.GeneralSecurityException;
 import java.security.cert.CertificateException;
-import java.util.Collections;
 
 /** @author Galudisu */
 @Slf4j
@@ -67,14 +65,11 @@ public class Http2Launch implements Launch {
     if (SSL_SUPPORT) {
       try {
         sslCtx =
-            SSLContextFactory.generateServerSslContext(
-                Collections.singleton(getPath("openssl/ca.pem")),
-                getPath("openssl/server.key"),
-                "ericsson");
+            SSLContextFactory.generateServerSslContext(getPath("openssl/server.pem"), getPath("openssl/server.key"));
       } catch (SSLException e) {
         log.debug("no ssl certificate provided, rollback to http1");
-      } catch (GeneralSecurityException | IOException e) {
-        e.printStackTrace();
+      } catch (IOException e) {
+        log.debug("cannot read ssl certificate provided, rollback to http1");
       }
     }
     return sslCtx;
