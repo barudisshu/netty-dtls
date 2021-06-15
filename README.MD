@@ -81,6 +81,29 @@ openssl req -in my.csr -noout -text
 
 ## with certificate
 
-```bash
-curl -k -v --cert client.crt --key pkcs8_client.key --cacert ca.crt https://localhost:8443/
+
+1. GET
+
+```shell
+curl -k -v -L --output -s --compressed --http2-prior-knowledge -X CONNECT --cert client.crt --key pkcs8_client.key --cacert ca.crt https://127.0.0.1:8443/
 ```
+
+
+2. POST
+
+```shell
+curl -k -vvvv \
+ -H "Accept: application/json" \
+ -H "Content-Type: application/json; charset=UTF-8" \
+ -d '{"framework":"netty"}' \
+ -L \
+ --http2-prior-knowledge \
+ --cert client.crt \
+ --key pkcs8_client.key \
+ --cacert ca.crt \
+ https://127.0.0.1:8443/ \
+ --output -
+```
+
+`output` 会将结果打印到控制台。
+
