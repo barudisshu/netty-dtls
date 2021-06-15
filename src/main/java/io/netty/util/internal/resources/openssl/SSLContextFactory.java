@@ -7,7 +7,7 @@ import io.netty.handler.ssl.util.SelfSignedCertificate;
 
 import javax.net.ssl.SSLException;
 import java.io.IOException;
-import java.nio.file.Path;
+import java.io.InputStream;
 import java.security.cert.CertificateException;
 
 /** SSLContext factory for handle client connection */
@@ -16,13 +16,15 @@ public final class SSLContextFactory {
   private SSLContextFactory() {}
 
   public static SslContext generateServerSslContext(
-      Path caPath, Path certificatePath, Path privateKeyPath, String keyPassword)
+      InputStream caPath,
+      InputStream certificatePath,
+      InputStream privateKeyPath,
+      String keyPassword)
       throws SSLException {
-    return SslContextBuilder.forServer(
-            certificatePath.toFile(), privateKeyPath.toFile(), keyPassword)
+    return SslContextBuilder.forServer(certificatePath, privateKeyPath, keyPassword)
         .sslProvider(SslProvider.OPENSSL)
         .ciphers(Http2SecurityUtil.CIPHERS, SupportedCipherSuiteFilter.INSTANCE)
-        .trustManager(caPath.toFile())
+        .trustManager(caPath)
         .build();
   }
 
@@ -42,13 +44,16 @@ public final class SSLContextFactory {
   }
 
   public static SslContext generateClientSslContext(
-      Path caPath, Path certificatePath, Path privateKeyPath, String keyPassword)
+      InputStream caPath,
+      InputStream certificatePath,
+      InputStream privateKeyPath,
+      String keyPassword)
       throws IOException {
     return SslContextBuilder.forClient()
         .sslProvider(SslProvider.OPENSSL)
         .ciphers(Http2SecurityUtil.CIPHERS, SupportedCipherSuiteFilter.INSTANCE)
-        .trustManager(caPath.toFile())
-        .keyManager(certificatePath.toFile(), privateKeyPath.toFile(), keyPassword)
+        .trustManager(caPath)
+        .keyManager(certificatePath, privateKeyPath, keyPassword)
         .applicationProtocolConfig(
             new ApplicationProtocolConfig(
                 ApplicationProtocolConfig.Protocol.ALPN,
