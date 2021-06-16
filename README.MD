@@ -34,7 +34,7 @@ openssl req -newkey rsa:2048 -nodes -days 365000 \
 
 NOTE: subject must be difference with CA.
 
-4. Generate the X509 certificate for the server and client;
+4. Generate the X509 certificate for the server and client:
 
 ```shell
 openssl x509 -req -days 365000 -set_serial 01 -in server.csr -out server.crt -CA ca.crt -CAkey ca.key
@@ -53,6 +53,34 @@ openssl verify -CAfile ca.crt ca.crt client.crt
 ```shell
 openssl pkcs8 -v1 "PBE-SHA1-3DES" -topk8 -in server.key -out pkcs8_server.key
 openssl pkcs8 -v1 "PBE-SHA1-3DES" -topk8 -in client.key -out pkcs8_client.key
+```
+
+7. Generate truststore:
+
+```shell
+keytool -import -noprompt -file ca.crt -keystore truststore.jks -storepass ericsson
+```
+
+8. Generate keystore for server:
+
+```shell
+openssl pkcs12 -export -in server.crt -inkey server.key -out server.pkcs12 -passout pass:server
+keytool -importkeystore -srckeystore server.pkcs12 -srcstoretype PKCS12 -destkeystore server.jks -srcstorepass server -deststorepass server
+```
+
+8. Generate keystore for client:
+
+```shell
+openssl pkcs12 -export -in client.crt -inkey client.key -out client.pkcs12 -passout pass:client
+keytool -importkeystore -srckeystore client.pkcs12 -srcstoretype PKCS12 -destkeystore client.jks -srcstorepass client -deststorepass client
+```
+
+9. Verify
+
+```shell
+keytool --list -keystore client.jks -storepass client
+keytool --list -keystore server.jks -storepass server
+keytool --list -keystore truststore.jks -storepass ericsson
 ```
 
 Finally, you will get:
