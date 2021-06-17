@@ -65,14 +65,14 @@ keytool -import -noprompt -file ca.crt -keystore truststore.jks -storepass erics
 
 ```shell
 openssl pkcs12 -export -in server.crt -inkey server.key -out server.pkcs12 -passout pass:server
-keytool -importkeystore -srckeystore server.pkcs12 -srcstoretype PKCS12 -destkeystore server.jks -srcstorepass server -deststorepass server
+keytool -importkeystore -srckeystore server.pkcs12 -srcstoretype PKCS12 -deststoretype pkcs12 -destkeystore server.jks -srcstorepass server -deststorepass server
 ```
 
 8. Generate keystore for client:
 
 ```shell
 openssl pkcs12 -export -in client.crt -inkey client.key -out client.pkcs12 -passout pass:client
-keytool -importkeystore -srckeystore client.pkcs12 -srcstoretype PKCS12 -destkeystore client.jks -srcstorepass client -deststorepass client
+keytool -importkeystore -srckeystore client.pkcs12 -srcstoretype PKCS12 -deststoretype pkcs12 -destkeystore client.jks -srcstorepass client -deststorepass client
 ```
 
 9. Verify
@@ -102,7 +102,7 @@ openssl s_client -dtls -CAfile ca.crt -cert client.crt -key pkcs8_client.key -co
 1. GET
 
 ```shell
-curl -k -v -L --output -s --compressed --http2-prior-knowledge -X CONNECT --cert client.crt --key pkcs8_client.key --cacert ca.crt https://127.0.0.1:8443/
+curl -k -v -L --output --http2-prior-knowledge -X CONNECT --cert client.crt --key pkcs8_client.key --cacert ca.crt https://127.0.0.1:8443/
 ```
 
 
@@ -115,11 +115,11 @@ curl -k -vvvv \
  -d '{"framework":"netty"}' \
  -L \
  --http2-prior-knowledge \
+ --output \
  --cert client.crt \
  --key pkcs8_client.key \
  --cacert ca.crt \
- https://127.0.0.1:8443/ \
- --output -
+ https://127.0.0.1:8443/
 ```
 
 Use `output` to print response message:  

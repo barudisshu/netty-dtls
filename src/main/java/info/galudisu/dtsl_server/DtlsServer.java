@@ -13,8 +13,8 @@ import java.net.DatagramSocket;
 public class DtlsServer implements Dispatch {
   public static void main(String[] args) throws Exception {
     // Carga la KeyStore con las claves del servidor
-    System.setProperty("javax.net.ssl.keyStore", args[0]);
-    System.setProperty("javax.net.ssl.keyStorePassword", args[1]);
+    System.setProperty("javax.net.ssl.keyStore", Thread.currentThread().getContextClassLoader().getResource("openssl/server.pkcs12").getPath());
+    System.setProperty("javax.net.ssl.keyStorePassword", "server");
 
     // DatagramSocket para comunicarse con el cliente
     DatagramSocket socket = new DatagramSocket(4739);
