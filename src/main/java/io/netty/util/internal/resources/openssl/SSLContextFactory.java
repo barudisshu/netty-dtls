@@ -5,19 +5,10 @@ import io.netty.handler.ssl.*;
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import io.netty.handler.ssl.util.SelfSignedCertificate;
 
-import javax.net.ssl.KeyManagerFactory;
-import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLException;
-import javax.net.ssl.TrustManagerFactory;
 import java.io.IOException;
 import java.io.InputStream;
-import java.security.GeneralSecurityException;
-import java.security.KeyStore;
-import java.security.PrivateKey;
 import java.security.cert.CertificateException;
-import java.security.cert.X509Certificate;
-import java.util.Collection;
-import java.util.Collections;
 
 /** SSLContext factory for handle client connection */
 public final class SSLContextFactory {
@@ -88,30 +79,19 @@ public final class SSLContextFactory {
         .build();
   }
 
-  public static SSLContext generateDTLSContext(
+  public static SslContext generateDTLSContext(
       InputStream caPath,
       InputStream certificatePath,
       InputStream privateKeyPath,
       String keyPassword)
       throws SSLException {
-    try {
-      SSLContext sslCtx = SSLContext.getInstance("DTLS");
-      Collection<X509Certificate> ca =
-          PemUtils.readCertificatesStream(Collections.singleton(caPath));
-      PrivateKey privateKey =
-          PemUtils.readPrivateKeyStream(privateKeyPath, keyPassword::toCharArray);
-      Collection<X509Certificate> cer =
-          PemUtils.readCertificatesStream(Collections.singleton(certificatePath));
-      KeyStore ks = KeyStoreUtil.buildKeyStore(cer, privateKey, keyPassword.toCharArray());
-      KeyStore ts = KeyStoreUtil.buildTrustStore(ca);
-      KeyManagerFactory kmf = KeyManagerFactory.getInstance("SunX509");
-      kmf.init(ks, keyPassword.toCharArray());
-      TrustManagerFactory tmf = TrustManagerFactory.getInstance("SunX509");
-      tmf.init(ts);
-      sslCtx.init(kmf.getKeyManagers(), tmf.getTrustManagers(), null);
-      return sslCtx;
-    } catch (GeneralSecurityException e) {
-      throw new SSLException("error occur while generate dtls context", e);
-    }
+    SslContext sslCtx =
+        SslContextBuilder.forServer(certificatePath, privateKeyPath, keyPassword)
+            .sslProvider(SslProvider.OPENSSL)
+            .protocols("DTLSv1.2")
+            .ciphers(Http2SecurityUtil.CIPHERS, SupportedCipherSuiteFilter.INSTANCE)
+            .trustManager(caPath)
+            .build();
+    return sslCtx;
   }
 }

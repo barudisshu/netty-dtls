@@ -7,13 +7,17 @@ import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.socket.DatagramChannel;
+import io.netty.handler.ssl.SslContext;
 import io.netty.util.internal.resources.platform.DefaultLoopNativeDetector;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.net.ssl.SSLContext;
+import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import static io.netty.channel.unix.UnixChannelOption.SO_REUSEPORT;
+import static io.netty.util.internal.resources.openssl.SSLContextFactory.generateDTLSContext;
 import static io.netty.util.internal.resources.platform.DefaultLoopNativeDetector.IS_EPOLL_OPEN;
 
 /** @author Galudisu */
@@ -36,7 +40,7 @@ public class UdpLaunch implements Launch {
           .option(ChannelOption.SO_REUSEADDR, true)
           .option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
           .channel(DefaultLoopNativeDetector.INSTANCE.getChannelClass(DatagramChannel.class))
-          .handler(new UdpChannelInitializer());
+          .handler(new UdpChannelInitializer(openSslCtx()));
 
       if (IS_EPOLL_OPEN) {
         bootstrap.option(SO_REUSEPORT, true);
@@ -54,6 +58,22 @@ public class UdpLaunch implements Launch {
       log.error("http2 server error", e);
       Thread.currentThread().interrupt();
     }
+  }
+
+  private SslContext openSslCtx() {
+    SslContext sslCtx = null;
+    try {
+      sslCtx =
+          generateDTLSContext(
+              getPath("openssl/ca.crt"),
+              getPath("openssl/server.crt"),
+              getPath("openssl/pkcs8_server.key"),
+              "server");
+    } catch (IOException e) {
+      log.debug("rollback to udp");
+    }
+
+    return sslCtx;
   }
 
   public void closeChannel() {
