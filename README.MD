@@ -37,8 +37,8 @@ NOTE: subject must be difference with CA.
 4. Generate the X509 certificate for the server and client:
 
 ```shell
-openssl x509 -req -days 365000 -set_serial 01 -in server.csr -out server.crt -CA ca.crt -CAkey ca.key
-openssl x509 -req -days 365000 -set_serial 01 -in client.csr -out client.crt -CA ca.crt -CAkey ca.key
+openssl x509 -req -days 365000 -set_serial 01 -in server.csr -out server.crt -CA ca.crt -CAkey ca.key -CAcreateserial
+openssl x509 -req -days 365000 -set_serial 01 -in client.csr -out client.crt -CA ca.crt -CAkey ca.key -CAcreateserial
 ```
 
 5. Verify
