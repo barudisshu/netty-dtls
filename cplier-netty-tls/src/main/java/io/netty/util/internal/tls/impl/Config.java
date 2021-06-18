@@ -18,7 +18,7 @@ public @interface Config {
   String dtls_protocol() default "DTLSv1.2";
 
   @AttributeDefinition(description = "The SSL provider to use")
-  ProviderType provider() default ProviderType.BOUNCYCASTLE;
+  ProviderType provider() default ProviderType.JRE_DEFAULT;
 
   @AttributeDefinition(
       description = "The Key Manager algorithm to use, defaults to the JRE default")

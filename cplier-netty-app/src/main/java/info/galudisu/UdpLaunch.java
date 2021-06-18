@@ -12,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import io.netty.util.internal.resources.openssl.SSLContextFactory;
 import io.netty.util.internal.resources.platform.DefaultLoopNativeDetector;
 
+import javax.net.ssl.SSLContext;
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -38,7 +39,7 @@ public class UdpLaunch implements Launch {
           .option(ChannelOption.SO_REUSEADDR, true)
           .option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
           .channel(DefaultLoopNativeDetector.INSTANCE.getChannelClass(DatagramChannel.class))
-          .handler(new UdpChannelInitializer());
+          .handler(new UdpChannelInitializer(openSslCtx()));
 
       if (DefaultLoopNativeDetector.IS_EPOLL_OPEN) {
         bootstrap.option(SO_REUSEPORT, true);
@@ -58,8 +59,8 @@ public class UdpLaunch implements Launch {
     }
   }
 
-  private SslContext openSslCtx() {
-    SslContext sslCtx = null;
+  private SSLContext openSslCtx() {
+    SSLContext sslCtx = null;
     try {
       sslCtx =
           SSLContextFactory.generateDTLSContext(

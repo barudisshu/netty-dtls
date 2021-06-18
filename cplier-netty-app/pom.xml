@@ -25,6 +25,12 @@
         </dependency>
 
         <dependency>
+            <groupId>info.galudisu</groupId>
+            <artifactId>cplier-netty-tls</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+
+        <dependency>
             <groupId>io.netty</groupId>
             <artifactId>netty-tcnative-boringssl-static</artifactId>
             <classifier>linux-x86_64</classifier>
