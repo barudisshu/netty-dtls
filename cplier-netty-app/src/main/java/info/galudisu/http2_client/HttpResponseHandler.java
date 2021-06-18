@@ -92,9 +92,9 @@ public class HttpResponseHandler extends SimpleChannelInboundHandler<FullHttpRes
       ByteBuf content = msg.content();
       if (content.isReadable()) { // NOSONAR
         int contentLength = content.readableBytes();
-        byte[] arr = new byte[contentLength];
+        var arr = new byte[contentLength];
         content.readBytes(arr);
-        String response = new String(arr, 0, contentLength, CharsetUtil.UTF_8);
+        var response = new String(arr, 0, contentLength, CharsetUtil.UTF_8);
         log.debug(
             "\n{}--- TCP: Response from Sever ---{}\n{}{}{}\n",
             Hightlight.GREEN,

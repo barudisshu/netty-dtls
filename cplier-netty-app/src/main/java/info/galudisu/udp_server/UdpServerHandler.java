@@ -1,8 +1,8 @@
 package info.galudisu.udp_server;
 
-import info.galudisu.ConsoleOutput;
 import info.galudisu.Hightlight;
 import info.galudisu.Proverb;
+import info.galudisu.ConsoleOutput;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.channel.socket.DatagramPacket;
@@ -14,7 +14,7 @@ public class UdpServerHandler extends SimpleChannelInboundHandler<DatagramPacket
 
   @Override
   protected void channelRead0(ChannelHandlerContext ctx, DatagramPacket datagramPacket) {
-    String req = datagramPacket.content().toString(CharsetUtil.UTF_8);
+    var req = datagramPacket.content().toString(CharsetUtil.UTF_8);
     log.debug(
         "\n{}--- UDP: Receiving message from client ---{}\n{}{}{}\n",
         Hightlight.GREEN,

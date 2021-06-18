@@ -9,14 +9,13 @@ import io.netty.channel.socket.ServerSocketChannel;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
 import io.netty.handler.ssl.SslContext;
+import io.netty.util.internal.resources.openssl.SSLContextFactory;
 import io.netty.util.internal.resources.platform.DefaultLoopNativeDetector;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.net.ssl.SSLException;
 import java.io.IOException;
 import java.security.cert.CertificateException;
-
-import static io.netty.util.internal.resources.openssl.SSLContextFactory.generateServerSslContext;
 
 /** @author Galudisu */
 @Slf4j
@@ -34,7 +33,7 @@ public class Http2Launch implements Launch {
 
   public void startServer() {
     try {
-      final ServerBootstrap serverBootstrap = new ServerBootstrap();
+      final var serverBootstrap = new ServerBootstrap();
       channelFuture =
           serverBootstrap
               .group(httpServerBossGroup, httpServerWorkerGroup)
@@ -64,7 +63,7 @@ public class Http2Launch implements Launch {
     if (SSL_SUPPORT) {
       try {
         sslCtx =
-            generateServerSslContext(
+            SSLContextFactory.generateServerSslContext(
                 getPath("openssl/ca.crt"),
                 getPath("openssl/server.crt"),
                 getPath("openssl/pkcs8_server.key"),
@@ -83,7 +82,7 @@ public class Http2Launch implements Launch {
     SslContext sslCtx = null;
     if (SSL_SUPPORT) {
       try {
-        sslCtx = generateServerSslContext();
+        sslCtx = SSLContextFactory.generateServerSslContext();
       } catch (CertificateException | SSLException e) { // NOSONAR
         log.debug("no ssl certificate provided, rollback to http1");
       }
@@ -105,7 +104,7 @@ public class Http2Launch implements Launch {
   }
 
   public static void main(String[] args) {
-    Http2Launch http2Launch = new Http2Launch();
+    var http2Launch = new Http2Launch();
     try {
       http2Launch.createEventLoopGroup();
       http2Launch.startServer();

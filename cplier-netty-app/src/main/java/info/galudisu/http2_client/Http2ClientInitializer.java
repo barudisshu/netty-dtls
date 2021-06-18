@@ -78,9 +78,9 @@ public class Http2ClientInitializer extends ChannelInitializer<SocketChannel> {
 
   /** Configure the pipeline for a cleartext upgrade from HTTP to HTTP/2. */
   private void configureClearText(SocketChannel ch) {
-    HttpClientCodec sourceCodec = new HttpClientCodec();
-    Http2ClientUpgradeCodec upgradeCodec = new Http2ClientUpgradeCodec(connectionHandler);
-    HttpClientUpgradeHandler upgradeHandler =
+    var sourceCodec = new HttpClientCodec();
+    var upgradeCodec = new Http2ClientUpgradeCodec(connectionHandler);
+    var upgradeHandler =
         new HttpClientUpgradeHandler(sourceCodec, upgradeCodec, 65536);
     ChannelPipeline pipeline = ch.pipeline();
     pipeline.addLast(new LoggingHandler());

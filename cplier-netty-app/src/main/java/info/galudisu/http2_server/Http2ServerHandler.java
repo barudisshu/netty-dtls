@@ -28,7 +28,7 @@ public class Http2ServerHandler extends Http2ConnectionHandler implements Http2F
 
   private static Http2Headers http1HeadersToHttp2Headers(FullHttpRequest request) {
     CharSequence host = request.headers().get(HttpHeaderNames.HOST);
-    Http2Headers http2Headers =
+    var http2Headers =
         new DefaultHttp2Headers()
             .method(HttpMethod.GET.asciiName())
             .path(request.uri())
@@ -42,7 +42,7 @@ public class Http2ServerHandler extends Http2ConnectionHandler implements Http2F
   @Override
   public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
     if (evt instanceof HttpServerUpgradeHandler.UpgradeEvent) {
-      HttpServerUpgradeHandler.UpgradeEvent upgradeEvent =
+      var upgradeEvent =
           (HttpServerUpgradeHandler.UpgradeEvent) evt;
       onHeadersRead(ctx, 1, http1HeadersToHttp2Headers(upgradeEvent.upgradeRequest()), 0, true);
     }

@@ -5,7 +5,6 @@ import info.galudisu.http2_client.Http2SettingsHandler;
 import info.galudisu.http2_client.HttpResponseHandler;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.Unpooled;
-import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
@@ -15,8 +14,9 @@ import io.netty.handler.codec.http2.HttpConversionUtil;
 import io.netty.handler.ssl.SslContext;
 import io.netty.util.AsciiString;
 import io.netty.util.CharsetUtil;
-import io.netty.util.internal.resources.platform.DefaultLoopNativeDetector;
 import lombok.extern.slf4j.Slf4j;
+import io.netty.util.internal.resources.openssl.SSLContextFactory;
+import io.netty.util.internal.resources.platform.DefaultLoopNativeDetector;
 
 import javax.net.ssl.SSLException;
 import java.io.IOException;
@@ -24,7 +24,6 @@ import java.util.concurrent.TimeUnit;
 
 import static io.netty.handler.codec.http.HttpMethod.GET;
 import static io.netty.handler.codec.http.HttpMethod.POST;
-import static io.netty.util.internal.resources.openssl.SSLContextFactory.generateClientSslContext;
 
 @Slf4j
 public class Client2Launch implements Launch {
@@ -41,7 +40,7 @@ public class Client2Launch implements Launch {
   @Override
   public void startServer() {
     Http2ClientInitializer initializer = new Http2ClientInitializer(openSslCtx());
-    final Bootstrap bootstrap = new Bootstrap();
+    final var bootstrap = new Bootstrap();
     channelFuture =
         bootstrap
             .group(workerGroup)
@@ -52,7 +51,7 @@ public class Client2Launch implements Launch {
             .connect()
             .syncUninterruptibly();
 
-    Channel channel = channelFuture.channel();
+    var channel = channelFuture.channel();
     log.info("Connected to [{}]", getPort());
     Http2SettingsHandler http2SettingsHandler = initializer.getSettingsHandler();
     http2SettingsHandler.awaitSettings(60, TimeUnit.SECONDS);
@@ -61,7 +60,7 @@ public class Client2Launch implements Launch {
         buildPostRequest(
             getSchema(), AsciiString.of("127.0.0.1"), "/proverb", "{\"framework\": \"netty\"}");
     HttpResponseHandler responseHandler = initializer.getResponseHandler();
-    int streamId = 3;
+    var streamId = 3;
     responseHandler.put(streamId, channel.write(request), channel.newPromise());
     channel.flush();
     String response = responseHandler.awaitResponses(60, TimeUnit.SECONDS);
@@ -116,7 +115,7 @@ public class Client2Launch implements Launch {
   }
 
   public static void main(String[] args) {
-    Client2Launch client2Launch = new Client2Launch();
+    var client2Launch = new Client2Launch();
     try {
       client2Launch.createEventLoopGroup();
       client2Launch.startServer();
@@ -136,7 +135,7 @@ public class Client2Launch implements Launch {
     if (SSL_SUPPORT) {
       try {
         sslCtx =
-            generateClientSslContext(
+            SSLContextFactory.generateClientSslContext(
                 getPath("openssl/ca.crt"),
                 getPath("openssl/client.crt"),
                 getPath("openssl/pkcs8_client.key"),
@@ -154,7 +153,7 @@ public class Client2Launch implements Launch {
     SslContext sslCtx = null;
     if (SSL_SUPPORT) {
       try {
-        sslCtx = generateClientSslContext();
+        sslCtx = SSLContextFactory.generateClientSslContext();
       } catch (SSLException e) {
         log.debug("no ssl certificate provided, rollback to http1", e);
       }

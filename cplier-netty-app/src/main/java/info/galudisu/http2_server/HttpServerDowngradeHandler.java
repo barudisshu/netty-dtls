@@ -19,7 +19,7 @@ public class HttpServerDowngradeHandler extends SimpleChannelInboundHandler<Http
   }
 
   @Override
-  protected void channelRead0(ChannelHandlerContext ctx, HttpMessage msg) throws Exception {
+  protected void channelRead0(ChannelHandlerContext ctx, HttpMessage msg) {
     log.debug("Directly talking: {} (no upgrade was attempted)", msg.protocolVersion());
     ChannelPipeline pipeline = ctx.pipeline();
     pipeline.addAfter(ctx.name(), null, new Http1ServerHandler("Direct. No Upgrade Attempted."));

@@ -8,17 +8,15 @@ import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.socket.DatagramChannel;
 import io.netty.handler.ssl.SslContext;
-import io.netty.util.internal.resources.platform.DefaultLoopNativeDetector;
 import lombok.extern.slf4j.Slf4j;
+import io.netty.util.internal.resources.openssl.SSLContextFactory;
+import io.netty.util.internal.resources.platform.DefaultLoopNativeDetector;
 
-import javax.net.ssl.SSLContext;
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import static io.netty.channel.unix.UnixChannelOption.SO_REUSEPORT;
-import static io.netty.util.internal.resources.openssl.SSLContextFactory.generateDTLSContext;
-import static io.netty.util.internal.resources.platform.DefaultLoopNativeDetector.IS_EPOLL_OPEN;
 
 /** @author Galudisu */
 @Slf4j
@@ -33,23 +31,23 @@ public class UdpLaunch implements Launch {
 
   public void startServer() {
     try {
-      final Bootstrap bootstrap = new Bootstrap();
+      final var bootstrap = new Bootstrap();
       bootstrap
           .group(channelGroup)
           .option(ChannelOption.SO_BROADCAST, true)
           .option(ChannelOption.SO_REUSEADDR, true)
           .option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
           .channel(DefaultLoopNativeDetector.INSTANCE.getChannelClass(DatagramChannel.class))
-          .handler(new UdpChannelInitializer(openSslCtx()));
+          .handler(new UdpChannelInitializer());
 
-      if (IS_EPOLL_OPEN) {
+      if (DefaultLoopNativeDetector.IS_EPOLL_OPEN) {
         bootstrap.option(SO_REUSEPORT, true);
-        for (int i = 0; i < CPU_CORE; i++) {
-          ChannelFuture channelFuture = bootstrap.bind(1314).sync();
+        for (var i = 0; i < CPU_CORE; i++) {
+          var channelFuture = bootstrap.bind(1314).sync();
           channelFutures.add(channelFuture);
         }
       } else {
-        ChannelFuture channelFuture = bootstrap.bind(1314).sync();
+        var channelFuture = bootstrap.bind(1314).sync();
         channelFutures.add(channelFuture);
       }
 
@@ -64,7 +62,7 @@ public class UdpLaunch implements Launch {
     SslContext sslCtx = null;
     try {
       sslCtx =
-          generateDTLSContext(
+          SSLContextFactory.generateDTLSContext(
               getPath("openssl/ca.crt"),
               getPath("openssl/server.crt"),
               getPath("openssl/pkcs8_server.key"),
@@ -91,7 +89,7 @@ public class UdpLaunch implements Launch {
   }
 
   public static void main(String[] args) {
-    UdpLaunch udpLaunch = new UdpLaunch();
+    var udpLaunch = new UdpLaunch();
     try {
       udpLaunch.createEventLoopGroup();
       udpLaunch.startServer();

@@ -14,11 +14,11 @@ import java.net.InetSocketAddress;
 public class HttpClientDowngradeHandler extends ChannelInboundHandlerAdapter {
   @Override
   public void channelActive(ChannelHandlerContext ctx) {
-    DefaultFullHttpRequest upgradeRequest =
+    var upgradeRequest =
         new DefaultFullHttpRequest(
             HttpVersion.HTTP_1_1, HttpMethod.GET, "/", Unpooled.EMPTY_BUFFER);
     InetSocketAddress remote = (InetSocketAddress) ctx.channel().remoteAddress();
-    String hostString = remote.getHostString();
+    var hostString = remote.getHostString();
     if (hostString == null) {
       hostString = remote.getAddress().getHostAddress();
     }
