@@ -6,7 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.concurrent.TimeUnit;
 
-/** @author Galudisu */
+/** @author galudisu */
 @Slf4j
 public class Http2DelayHandler extends ChannelOutboundHandlerAdapter {
 

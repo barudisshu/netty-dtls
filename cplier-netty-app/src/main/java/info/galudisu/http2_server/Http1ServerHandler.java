@@ -20,7 +20,7 @@ import static io.netty.handler.codec.http.HttpVersion.HTTP_1_0;
 import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 import static io.netty.util.internal.ObjectUtil.checkNotNull;
 
-/** @author Galudisu */
+/** @author galudisu */
 @Slf4j
 public class Http1ServerHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
   private final String establishApproach;

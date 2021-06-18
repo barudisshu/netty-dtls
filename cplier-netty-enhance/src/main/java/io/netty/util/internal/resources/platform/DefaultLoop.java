@@ -16,7 +16,7 @@ import java.util.concurrent.ThreadFactory;
  *
  * We only care about NIO and Epoll here.
  *
- * @author Galudisu
+ * @author galudisu
  */
 public interface DefaultLoop {
 

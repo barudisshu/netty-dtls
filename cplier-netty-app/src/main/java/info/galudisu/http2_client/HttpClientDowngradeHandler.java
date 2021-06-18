@@ -10,7 +10,7 @@ import io.netty.handler.codec.http.HttpVersion;
 
 import java.net.InetSocketAddress;
 
-/** @author Galudisu */
+/** @author galudisu */
 public class HttpClientDowngradeHandler extends ChannelInboundHandlerAdapter {
   @Override
   public void channelActive(ChannelHandlerContext ctx) {

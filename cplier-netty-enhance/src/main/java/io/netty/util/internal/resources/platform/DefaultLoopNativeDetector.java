@@ -3,7 +3,7 @@ package io.netty.util.internal.resources.platform;
 /**
  * Native transport detector
  *
- * @author Galudisu
+ * @author galudisu
  */
 public final class DefaultLoopNativeDetector {
 

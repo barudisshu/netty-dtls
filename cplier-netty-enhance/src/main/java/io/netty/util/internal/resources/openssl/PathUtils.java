@@ -6,7 +6,7 @@ import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-/** @author ehcayen */
+/** @author galudisu */
 public final class PathUtils {
 
   private PathUtils() {

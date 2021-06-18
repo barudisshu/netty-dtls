@@ -6,7 +6,7 @@ import io.netty.handler.codec.http2.HttpToHttp2ConnectionHandler;
 import io.netty.handler.ssl.ApplicationProtocolNames;
 import io.netty.handler.ssl.ApplicationProtocolNegotiationHandler;
 
-/** @author Galudisu */
+/** @author galudisu */
 public class Http2OrHttpClientHandler extends ApplicationProtocolNegotiationHandler {
   private final HttpToHttp2ConnectionHandler connectionHandler;
   private final Http2SettingsHandler settingsHandler;

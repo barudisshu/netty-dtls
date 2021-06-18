@@ -16,7 +16,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * Process {@link FullHttpResponse} translated from HTTP/2 frames
  *
- * @author Galudisu
+ * @author galudisu
  */
 @Slf4j
 public class HttpResponseHandler extends SimpleChannelInboundHandler<FullHttpResponse> {

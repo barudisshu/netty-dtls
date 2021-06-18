@@ -11,7 +11,7 @@ import io.netty.handler.ssl.SslContext;
 
 import static io.netty.handler.logging.LogLevel.DEBUG;
 
-/** @author Galudisu */
+/** @author galudisu */
 public class Http2ClientInitializer extends ChannelInitializer<SocketChannel> {
   private static final Http2FrameLogger HTTP_2_FRAME_LOGGER =
       new Http2FrameLogger(DEBUG, Http2ClientInitializer.class);

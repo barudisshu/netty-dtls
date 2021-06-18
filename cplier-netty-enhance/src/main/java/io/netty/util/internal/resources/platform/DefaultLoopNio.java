@@ -15,7 +15,7 @@ import java.util.concurrent.ThreadFactory;
 /**
  * {@link DefaultLoop} that uses {@code NIO} transport.
  *
- * @author Galudisu
+ * @author galudisu
  */
 public class DefaultLoopNio implements DefaultLoop {
   @Override

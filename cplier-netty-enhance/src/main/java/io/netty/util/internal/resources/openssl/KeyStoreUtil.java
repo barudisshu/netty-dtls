@@ -15,7 +15,7 @@ import java.util.function.Supplier;
 /**
  * KeyStoreUtil for handle {@link SSLContext} storage facility
  *
- * @author ehcayen
+ * @author galudisu
  */
 final class KeyStoreUtil {
 

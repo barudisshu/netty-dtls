@@ -10,7 +10,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * Reads the first {@link Http2Settings} object and notifies a {@link ChannelPromise}
  *
- * @author Galudisu
+ * @author galudisu
  */
 public class Http2SettingsHandler extends SimpleChannelInboundHandler<Http2Settings> {
 

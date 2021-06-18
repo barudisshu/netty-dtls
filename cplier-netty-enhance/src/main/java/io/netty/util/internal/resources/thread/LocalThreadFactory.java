@@ -6,7 +6,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * ThreadFactory used by {@link io.netty.channel.EventLoopGroup}
  *
- * @author Galudisu
+ * @author galudisu
  */
 public final class LocalThreadFactory implements ThreadFactory {
   final boolean daemon;

@@ -17,7 +17,7 @@ import javax.net.ssl.SSLException;
 import java.io.IOException;
 import java.security.cert.CertificateException;
 
-/** @author Galudisu */
+/** @author galudisu */
 @Slf4j
 public class Http2Launch implements Launch {
 

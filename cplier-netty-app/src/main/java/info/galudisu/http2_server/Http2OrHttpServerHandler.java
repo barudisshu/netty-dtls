@@ -9,7 +9,7 @@ import io.netty.handler.ssl.ApplicationProtocolNegotiationHandler;
 /**
  * A HTTP2 negotiation handler
  *
- * @author Galudisu
+ * @author galudisu
  */
 public class Http2OrHttpServerHandler extends ApplicationProtocolNegotiationHandler {
 

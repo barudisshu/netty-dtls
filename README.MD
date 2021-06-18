@@ -16,7 +16,7 @@ openssl genrsa 2048 > ca.key
 openssl req -new -x509 -nodes -days 365000 \
   -key ca.key \
   -out ca.crt \
-  -subj "/C=cn/ST=Guangdong/L=Guangzhou/O=Ericsson, Inc./OU=ericsson/CN=ericsson.com/emailAddress=ehcayen@ericsson.com"
+  -subj "/C=cn/ST=Guangdong/L=Guangzhou/O=Cplier, Inc./OU=cplier/CN=cplier.com/emailAddress=galudisu@cplier.com"
 ```
 
 3. Generate the private key and certificate request for the server and client:
@@ -25,11 +25,11 @@ openssl req -new -x509 -nodes -days 365000 \
 openssl req -newkey rsa:2048 -nodes -days 365000 \
   -keyout server.key \
   -out server.csr \
-  -subj "/C=cn/ST=Guangdong/L=Guangzhou/O=Ericsson, Server Inc./OU=ericsson/CN=ericsson.com/emailAddress=ehcayen@ericsson.com"
+  -subj "/C=cn/ST=Guangdong/L=Guangzhou/O=Cplier, Server Inc./OU=cplier/CN=cplier.com/emailAddress=galudisu@cplier.com"
 openssl req -newkey rsa:2048 -nodes -days 365000 \
   -keyout client.key \
   -out client.csr \
-  -subj "/C=cn/ST=Guangdong/L=Guangzhou/O=Ericsson, Client Inc./OU=ericsson/CN=ericsson.com/emailAddress=ehcayen@ericsson.com"
+  -subj "/C=cn/ST=Guangdong/L=Guangzhou/O=Cplier, Client Inc./OU=cplier/CN=cplier.com/emailAddress=galudisu@cplier.com"
 ```
 
 NOTE: subject must be difference with CA.
@@ -58,7 +58,7 @@ openssl pkcs8 -v1 "PBE-SHA1-3DES" -topk8 -in client.key -out pkcs8_client.key
 7. Generate truststore:
 
 ```shell
-keytool -import -noprompt -file ca.crt -keystore truststore.jks -storepass ericsson
+keytool -import -noprompt -file ca.crt -keystore truststore.jks -storepass cplier
 ```
 
 8. Generate keystore for server:
@@ -80,7 +80,7 @@ keytool -importkeystore -srckeystore client.pkcs12 -srcstoretype PKCS12 -deststo
 ```shell
 keytool --list -keystore client.jks -storepass client
 keytool --list -keystore server.jks -storepass server
-keytool --list -keystore truststore.jks -storepass ericsson
+keytool --list -keystore truststore.jks -storepass cplier
 ```
 
 Finally, you will get:

@@ -8,7 +8,7 @@ import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.util.ReferenceCountUtil;
 import lombok.extern.slf4j.Slf4j;
 
-/** @author Galudisu */
+/** @author galudisu */
 @Slf4j
 public class HttpServerDowngradeHandler extends SimpleChannelInboundHandler<HttpMessage> {
 

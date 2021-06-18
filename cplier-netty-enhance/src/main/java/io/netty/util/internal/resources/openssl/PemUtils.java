@@ -24,7 +24,7 @@ import java.security.spec.*;
 import java.util.*;
 import java.util.function.Supplier;
 
-/** @author ehcayen */
+/** @author galudisu */
 final class PemUtils {
 
   private static final String PKCS1_HEADER = "-----BEGIN RSA PRIVATE KEY-----";

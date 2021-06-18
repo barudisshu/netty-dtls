@@ -14,7 +14,7 @@ import static io.netty.buffer.Unpooled.unreleasableBuffer;
 import static io.netty.handler.codec.http.HttpResponseStatus.OK;
 import static io.netty.handler.codec.http2.Http2CodecUtil.getEmbeddedHttp2Exception;
 
-/** @author Galudisu */
+/** @author galudisu */
 @Slf4j
 public class Http2ServerHandler extends Http2ConnectionHandler implements Http2FrameListener {
   static final ByteBuf RESPONSE_BYTES = unreleasableBuffer(copiedBuffer("OK", CharsetUtil.UTF_8));

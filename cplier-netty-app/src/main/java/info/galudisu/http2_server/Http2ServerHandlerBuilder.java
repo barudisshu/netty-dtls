@@ -4,7 +4,7 @@ import io.netty.handler.codec.http2.*;
 
 import static io.netty.handler.logging.LogLevel.DEBUG;
 
-/** @author Galudisu */
+/** @author galudisu */
 public class Http2ServerHandlerBuilder
     extends AbstractHttp2ConnectionHandlerBuilder<Http2ServerHandler, Http2ServerHandlerBuilder> {
 

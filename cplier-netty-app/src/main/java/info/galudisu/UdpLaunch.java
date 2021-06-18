@@ -19,7 +19,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 import static io.netty.channel.unix.UnixChannelOption.SO_REUSEPORT;
 
-/** @author Galudisu */
+/** @author galudisu */
 @Slf4j
 public class UdpLaunch implements Launch {
 

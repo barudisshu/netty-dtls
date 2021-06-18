@@ -16,7 +16,7 @@ import java.util.concurrent.ThreadFactory;
 /**
  * {@link DefaultLoop} that uses {@code Epoll} transport.
  *
- * @author Galudisu
+ * @author galudisu
  */
 public class DefaultLoopEpoll implements DefaultLoop {
 

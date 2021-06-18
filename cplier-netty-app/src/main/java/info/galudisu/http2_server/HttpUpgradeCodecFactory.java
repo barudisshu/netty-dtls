@@ -5,7 +5,7 @@ import io.netty.handler.codec.http2.Http2CodecUtil;
 import io.netty.handler.codec.http2.Http2ServerUpgradeCodec;
 import io.netty.util.AsciiString;
 
-/** @author Galudisu */
+/** @author galudisu */
 public class HttpUpgradeCodecFactory implements HttpServerUpgradeHandler.UpgradeCodecFactory {
 
   @Override
