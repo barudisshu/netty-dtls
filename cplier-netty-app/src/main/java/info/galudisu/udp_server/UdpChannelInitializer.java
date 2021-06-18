@@ -21,9 +21,8 @@ public class UdpChannelInitializer extends ChannelInitializer<DatagramChannel> {
   @Override
   protected void initChannel(DatagramChannel ch) {
     ChannelPipeline pipeline = ch.pipeline();
-
-    SSLEngine engine = sslContext.createSSLEngine();
-    SSLParameters sslParameters = sslContext.getDefaultSSLParameters();
+    var engine = sslContext.createSSLEngine();
+    var sslParameters = sslContext.getDefaultSSLParameters();
     sslParameters.setNeedClientAuth(false);
     engine.setSSLParameters(sslParameters);
     engine.setUseClientMode(false);
