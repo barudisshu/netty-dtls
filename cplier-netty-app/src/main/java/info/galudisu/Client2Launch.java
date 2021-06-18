@@ -149,6 +149,7 @@ public class Client2Launch implements Launch {
     return sslCtx;
   }
 
+  @Deprecated
   private SslContext clientSslCtx() {
     SslContext sslCtx = null;
     if (SSL_SUPPORT) {
