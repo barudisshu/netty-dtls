@@ -21,13 +21,13 @@
         <dependency>
             <groupId>info.galudisu</groupId>
             <artifactId>cplier-netty-enhance</artifactId>
-            <version>${project.parent.version}</version>
+            <version>1.0-SNAPSHOT</version>
         </dependency>
 
         <dependency>
             <groupId>info.galudisu</groupId>
             <artifactId>cplier-netty-tls</artifactId>
-            <version>${project.parent.version}</version>
+            <version>1.0-SNAPSHOT</version>
         </dependency>
 
         <dependency>
@@ -111,6 +111,36 @@
                 </configuration>
             </plugin>
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <reuseForks>false</reuseForks>
+                    <argLine>@{argLine}
+                        --add-exports java.base/jdk.internal.misc=ALL-UNNAMED
+                        --add-exports java.base/jdk.internal.ref=ALL-UNNAMED
+                        --add-exports java.base/sun.nio.ch=ALL-UNNAMED
+                        --add-exports java.management.rmi/com.sun.jmx.remote.internal.rmi=ALL-UNNAMED
+                        --add-exports java.rmi/sun.rmi.registry=ALL-UNNAMED
+                        --add-exports java.rmi/sun.rmi.server=ALL-UNNAMED
+                        --add-exports java.sql/java.sql=ALL-UNNAMED
+                        --add-opens java.base/java.lang.module=ALL-UNNAMED
+                        --add-opens java.base/jdk.internal.misc=ALL-UNNAMED
+                        --add-opens java.base/jdk.internal.loader=ALL-UNNAMED
+                        --add-opens java.base/jdk.internal.ref=ALL-UNNAMED
+                        --add-opens java.base/jdk.internal.reflect=ALL-UNNAMED
+                        --add-opens java.base/jdk.internal.math=ALL-UNNAMED
+                        --add-opens java.base/jdk.internal.module=ALL-UNNAMED
+                        --add-opens java.base/jdk.internal.util.jar=ALL-UNNAMED
+                        --add-opens jdk.management/com.sun.management.internal=ALL-UNNAMED
+                        --illegal-access=permit
+                        -Dio.netty.tryReflectionSetAccessible=true
+                    </argLine>
+                    <includes>
+                        <include>**/*Test.java</include>
+                    </includes>
+                </configuration>
+            </plugin>
+            <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <executions>
@@ -119,7 +149,7 @@
                             <goal>repackage</goal>
                         </goals>
                         <configuration>
-                            <mainClass>info.galudisu.Http2Launch</mainClass>
+                            <mainClass>info.galudisu.UdpLaunch</mainClass>
                         </configuration>
                     </execution>
                 </executions>

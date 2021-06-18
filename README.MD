@@ -102,7 +102,7 @@ openssl s_client -dtls -CAfile ca.crt -cert client.crt -key pkcs8_client.key -co
 1. GET
 
 ```shell
-curl -k -vvv -L --http2-prior-knowledge --output -X CONNECT --cert client.crt --key pkcs8_client.key --cacert ca.crt https://127.0.0.1:8443/
+curl -k -vvv -L --http2-prior-knowledge --output - -X CONNECT --cert client.crt --key pkcs8_client.key --cacert ca.crt https://127.0.0.1:8443/
 ```
 
 
@@ -115,7 +115,7 @@ curl -k -vvvv \
  -d '{"framework":"netty"}' \
  -L \
  --http2-prior-knowledge \
- --output \
+ --output - \
  --cert client.crt \
  --key pkcs8_client.key \
  --cacert ca.crt \
