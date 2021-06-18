@@ -36,7 +36,7 @@ public final class SSLContextFactory {
   }
 
   public static SslContext generateServerSslContext() throws CertificateException, SSLException {
-    SelfSignedCertificate ssc = new SelfSignedCertificate();
+    var ssc = new SelfSignedCertificate();
     return SslContextBuilder.forServer(ssc.certificate(), ssc.privateKey())
         .sslProvider(SslProvider.JDK)
         .ciphers(Http2SecurityUtil.CIPHERS, SupportedCipherSuiteFilter.INSTANCE)
