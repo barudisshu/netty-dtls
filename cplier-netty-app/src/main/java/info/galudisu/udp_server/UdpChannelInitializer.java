@@ -8,7 +8,6 @@ import io.netty.util.internal.dtls.jsse.ParemusServerDTLSHandler;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLEngine;
-import javax.net.ssl.SSLParameters;
 
 public class UdpChannelInitializer extends ChannelInitializer<DatagramChannel> {
 
@@ -21,13 +20,18 @@ public class UdpChannelInitializer extends ChannelInitializer<DatagramChannel> {
   @Override
   protected void initChannel(DatagramChannel ch) {
     ChannelPipeline pipeline = ch.pipeline();
-    var engine = sslContext.createSSLEngine();
-    var sslParameters = sslContext.getDefaultSSLParameters();
-    sslParameters.setNeedClientAuth(false);
-    engine.setSSLParameters(sslParameters);
-    engine.setUseClientMode(false);
+    var engine = createSSLEngine(sslContext);
     pipeline.addLast(new ParemusServerDTLSHandler(new JdkDtlsEngineAdapter(engine)));
     pipeline.addLast(new UdpServerHandler());
     pipeline.addLast(new UdpSenderHandler());
+  }
+
+  private SSLEngine createSSLEngine(SSLContext sslContext) {
+    var engine = sslContext.createSSLEngine();
+    engine.setUseClientMode(false);
+    var sslParameters = engine.getSSLParameters();
+    sslParameters.setNeedClientAuth(true);
+    engine.setSSLParameters(sslParameters);
+    return engine;
   }
 }
