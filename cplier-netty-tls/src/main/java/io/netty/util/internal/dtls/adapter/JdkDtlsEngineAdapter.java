@@ -123,6 +123,7 @@ public class JdkDtlsEngineAdapter implements DtlsEngine {
       case NEED_TASK:
         return OperationRequired.RUN_TASK;
       case NEED_UNWRAP:
+      case NEED_UNWRAP_AGAIN:
         return OperationRequired.AWAITING_DATA;
       case NEED_WRAP:
         return OperationRequired.DATA_TO_SEND;
