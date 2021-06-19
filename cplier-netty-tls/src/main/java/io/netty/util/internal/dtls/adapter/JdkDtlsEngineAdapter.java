@@ -123,16 +123,12 @@ public class JdkDtlsEngineAdapter implements DtlsEngine {
       case NEED_TASK:
         return OperationRequired.RUN_TASK;
       case NEED_UNWRAP:
-      case NEED_UNWRAP_AGAIN:
         return OperationRequired.AWAITING_DATA;
+      case NEED_UNWRAP_AGAIN:
+        return OperationRequired.PENDING_RECEIVED_DATA;
       case NEED_WRAP:
         return OperationRequired.DATA_TO_SEND;
       default:
-        // We do this so that the code remains Java 8 compatible
-        if ("NEED_UNWRAP_AGAIN".equals(status.name())) {
-          return OperationRequired.PENDING_RECEIVED_DATA;
-        }
-
         throw new IllegalArgumentException("Unknown handshake status " + status);
     }
   }

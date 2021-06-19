@@ -30,7 +30,7 @@ public class UdpChannelInitializer extends ChannelInitializer<DatagramChannel> {
     var engine = sslContext.createSSLEngine();
     engine.setUseClientMode(false);
     var sslParameters = engine.getSSLParameters();
-    sslParameters.setNeedClientAuth(true);
+    sslParameters.setNeedClientAuth(false);
     engine.setSSLParameters(sslParameters);
     return engine;
   }
