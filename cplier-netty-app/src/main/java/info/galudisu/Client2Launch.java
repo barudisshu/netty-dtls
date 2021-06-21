@@ -1,7 +1,6 @@
 package info.galudisu;
 
 import info.galudisu.http2_client.Http2ClientInitializer;
-import info.galudisu.http2_client.Http2SettingsHandler;
 import info.galudisu.http2_client.HttpResponseHandler;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.Unpooled;
@@ -14,9 +13,9 @@ import io.netty.handler.codec.http2.HttpConversionUtil;
 import io.netty.handler.ssl.SslContext;
 import io.netty.util.AsciiString;
 import io.netty.util.CharsetUtil;
-import lombok.extern.slf4j.Slf4j;
 import io.netty.util.internal.resources.openssl.SSLContextFactory;
 import io.netty.util.internal.resources.platform.DefaultLoopNativeDetector;
+import lombok.extern.slf4j.Slf4j;
 
 import javax.net.ssl.SSLException;
 import java.io.IOException;
@@ -34,12 +33,12 @@ public class Client2Launch implements Launch {
 
   @Override
   public void createEventLoopGroup() {
-    workerGroup = createEventLoopGroup(true, CPU_CORE, "HTTP-CLIENT");
+    workerGroup = buildEventLoopGroup("HTTP-CLIENT");
   }
 
   @Override
   public void startServer() {
-    Http2ClientInitializer initializer = new Http2ClientInitializer(openSslCtx());
+    var initializer = new Http2ClientInitializer(openSslCtx());
     final var bootstrap = new Bootstrap();
     channelFuture =
         bootstrap
@@ -53,15 +52,29 @@ public class Client2Launch implements Launch {
 
     var channel = channelFuture.channel();
     log.info("Connected to [{}]", getPort());
-    Http2SettingsHandler http2SettingsHandler = initializer.getSettingsHandler();
+    var http2SettingsHandler = initializer.getSettingsHandler();
     http2SettingsHandler.awaitSettings(60, TimeUnit.SECONDS);
+
     log.info("Sending request(s)...");
+
+    // post
+
     FullHttpRequest request =
         buildPostRequest(
             getSchema(), AsciiString.of("127.0.0.1"), "/proverb", "{\"framework\": \"netty\"}");
     HttpResponseHandler responseHandler = initializer.getResponseHandler();
     var streamId = 3;
     responseHandler.put(streamId, channel.write(request), channel.newPromise());
+
+    request = buildPostRequest(getSchema(), AsciiString.of("0.0.0.0"), "/json", "{\"framework\": \"disrupt\"}");
+    streamId = 5;
+    responseHandler.put(streamId, channel.write(request), channel.newPromise());
+
+    // get
+    request = buildGetRequest(getSchema(), AsciiString.of("localhost"), "/proverb");
+    streamId = 7;
+    responseHandler.put(streamId, channel.write(request), channel.newPromise());
+
     channel.flush();
     String response = responseHandler.awaitResponses(60, TimeUnit.SECONDS);
     log.debug("response msg: {}", response);
@@ -149,8 +162,14 @@ public class Client2Launch implements Launch {
     return sslCtx;
   }
 
-  @Deprecated
-  private SslContext clientSslCtx() {
+  /**
+   * Using openssl instead.
+   *
+   * @deprecated Please check {@link Client2Launch#openSslCtx()}
+   * @return {@link SslContext}
+   */
+  @Deprecated(forRemoval = true)
+  private SslContext clientSslCtx() { // NOSONAR
     SslContext sslCtx = null;
     if (SSL_SUPPORT) {
       try {

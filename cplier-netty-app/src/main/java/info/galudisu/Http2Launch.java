@@ -27,8 +27,8 @@ public class Http2Launch implements Launch {
   private ChannelFuture channelFuture;
 
   public void createEventLoopGroup() {
-    httpServerBossGroup = createEventLoopGroup(true, CPU_CORE, "HTTP-BOSS");
-    httpServerWorkerGroup = createEventLoopGroup(false, CPU_CORE * 2, "HTTP-WORKER");
+    httpServerBossGroup = buildEventLoopGroup(true, "HTTP-BOSS");
+    httpServerWorkerGroup = buildEventLoopGroup(false, "HTTP-WORKER", true);
   }
 
   public void startServer() {
@@ -77,8 +77,12 @@ public class Http2Launch implements Launch {
     return sslCtx;
   }
 
-  @Deprecated
-  private SslContext sslCtx() {
+  /**
+   * @deprecated use {@link Http2Launch#openSslCtx()} instead.
+   * @return {@link SslContext}
+   */
+  @Deprecated(forRemoval = true)
+  private SslContext sslCtx() { // NOSONAR
     SslContext sslCtx = null;
     if (SSL_SUPPORT) {
       try {

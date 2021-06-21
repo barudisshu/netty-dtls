@@ -23,7 +23,7 @@ public class Http2ServerHandlerBuilder
   @Override
   protected Http2ServerHandler build(
       Http2ConnectionDecoder decoder, Http2ConnectionEncoder encoder, Http2Settings http2Settings) {
-    Http2ServerHandler handler = new Http2ServerHandler(decoder, encoder, http2Settings);
+    var handler = new Http2ServerHandler(decoder, encoder, http2Settings);
     frameListener(handler);
     return handler;
   }

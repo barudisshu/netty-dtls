@@ -26,7 +26,7 @@ public class UdpLaunch implements Launch {
   private static final List<ChannelFuture> channelFutures = new CopyOnWriteArrayList<>();
 
   public void createEventLoopGroup() {
-    channelGroup = createEventLoopGroup(true, CPU_CORE, "UDP-CHANNEL");
+    channelGroup = buildEventLoopGroup("UDP-CHANNEL");
   }
 
   public void startServer() {

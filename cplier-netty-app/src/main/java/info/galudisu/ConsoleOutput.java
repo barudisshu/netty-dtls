@@ -1,11 +1,13 @@
 package info.galudisu;
 
-import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import lombok.Getter;
 
+/** @author galudisu */
+@Getter
 public class ConsoleOutput {
 
-  private String message;
+  private final String message;
 
   public ConsoleOutput(String message) {
     this.message = message;
@@ -16,15 +18,7 @@ public class ConsoleOutput {
   }
 
   public static String ofPretty(String message) {
-    Gson gson = new GsonBuilder().setPrettyPrinting().create();
+    var gson = new GsonBuilder().setPrettyPrinting().create();
     return gson.toJson(ConsoleOutput.of(message));
-  }
-
-  public String getMessage() {
-    return message;
-  }
-
-  public void setMessage(String message) {
-    this.message = message;
   }
 }
