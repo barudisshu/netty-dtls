@@ -17,19 +17,16 @@
     </properties>
 
     <dependencies>
-
         <dependency>
             <groupId>info.galudisu</groupId>
             <artifactId>cplier-netty-enhance</artifactId>
             <version>1.0-SNAPSHOT</version>
         </dependency>
-
         <dependency>
             <groupId>info.galudisu</groupId>
             <artifactId>cplier-netty-tls</artifactId>
             <version>1.0-SNAPSHOT</version>
         </dependency>
-
         <dependency>
             <groupId>io.netty</groupId>
             <artifactId>netty-tcnative-boringssl-static</artifactId>
@@ -123,7 +120,6 @@
                         --add-exports java.rmi/sun.rmi.server=ALL-UNNAMED
                         --add-exports java.sql/java.sql=ALL-UNNAMED
                         --add-opens java.base/java.lang.module=ALL-UNNAMED
-                        --add-opens java.base/jdk.internal.misc=ALL-UNNAMED
                         --add-opens java.base/jdk.internal.loader=ALL-UNNAMED
                         --add-opens java.base/jdk.internal.ref=ALL-UNNAMED
                         --add-opens java.base/jdk.internal.reflect=ALL-UNNAMED
@@ -131,7 +127,9 @@
                         --add-opens java.base/jdk.internal.module=ALL-UNNAMED
                         --add-opens java.base/jdk.internal.util.jar=ALL-UNNAMED
                         --add-opens jdk.management/com.sun.management.internal=ALL-UNNAMED
-                        --illegal-access=permit
+                        --add-opens java.base/jdk.internal.misc=ALL-UNNAMED
+                        -Dio.netty.tryReflectionSetAccessible=true
+                        --illegal-access=warn
                     </argLine>
                     <includes>
                         <include>**/*Test.java</include>

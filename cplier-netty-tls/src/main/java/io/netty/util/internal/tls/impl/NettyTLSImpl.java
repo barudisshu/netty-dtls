@@ -63,7 +63,7 @@ public class NettyTLSImpl implements NettyTLS {
     Provider jsseProvider;
 
     switch (config.provider()) {
-      case BOUNCYCASTLE:
+      case BOUNCY_CASTLE:
         jceProvider = new BouncyCastleProvider();
         jsseProvider = new BouncyCastleJsseProvider(jceProvider);
         tlsSslContext = SSLContext.getInstance(tlsProtocol, jsseProvider);

@@ -8,6 +8,7 @@ import io.netty.util.internal.dtls.jsse.ServerDTLSHandler;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLEngine;
+import javax.net.ssl.SSLException;
 
 public class UdpChannelInitializer extends ChannelInitializer<DatagramChannel> {
 
@@ -26,6 +27,18 @@ public class UdpChannelInitializer extends ChannelInitializer<DatagramChannel> {
     pipeline.addLast(new UdpSenderHandler());
   }
 
+  /**
+   * Using JDK ssl if you need
+   *
+   * <pre>{@code
+   * var engine = createSSLEngine(sslContext);
+   * pipeline.addLast(new ServerDTLSHandler(new JdkDtlsEngineAdapter(engine)));
+   * }</pre>
+   *
+   * @param sslContext
+   * @return
+   * @throws SSLException
+   */
   private SSLEngine createSSLEngine(SSLContext sslContext) {
     var engine = sslContext.createSSLEngine();
     engine.setUseClientMode(false);

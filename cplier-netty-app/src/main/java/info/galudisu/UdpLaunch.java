@@ -65,12 +65,11 @@ public class UdpLaunch implements Launch {
           SSLContextFactory.generateDTLSContext(
               getPath("openssl/ca.crt"),
               getPath("openssl/server.crt"),
-              getPath("openssl/pkcs8_server.key"),
+              getPath("openssl/server.key"),
               "server");
     } catch (IOException e) {
       log.debug("rollback to udp");
     }
-
     return sslCtx;
   }
 

@@ -56,13 +56,13 @@ public class HandshakeDTLSHandler extends ChannelDuplexHandler implements Multip
   }
 
   @Override
-  public void handlerAdded(ChannelHandlerContext ctx) throws Exception {
+  public void handlerAdded(ChannelHandlerContext ctx) {
     this.ctx = ctx;
     timeout = ctx.executor().scheduleAtFixedRate(this::cleanup, 1, 1, TimeUnit.HOURS);
   }
 
   private void cleanup() {
-    Instant now = Instant.now();
+    var now = Instant.now();
     List<SocketAddress> toClose =
         lastApplicationData.entrySet().stream()
             .filter(e -> e.getValue().plus(1, ChronoUnit.MINUTES).isBefore(now))
@@ -74,14 +74,13 @@ public class HandshakeDTLSHandler extends ChannelDuplexHandler implements Multip
         log.debug("Disconnecting idle DTLS sessions for remote endpoints {}", toClose);
       }
 
-      lastApplicationData.keySet().removeAll(toClose);
-
-      toClose.stream().forEach(this::disconnect);
+      toClose.forEach(lastApplicationData.keySet()::remove);
+      toClose.forEach(this::disconnect);
     }
   }
 
   @Override
-  public void handlerRemoved(ChannelHandlerContext ctx) throws Exception {
+  public void handlerRemoved(ChannelHandlerContext ctx) {
     ctx.close();
   }
 
@@ -97,7 +96,7 @@ public class HandshakeDTLSHandler extends ChannelDuplexHandler implements Multip
     ChannelPromise pendingCloses = ctx.newPromise();
 
     @SuppressWarnings("deprecation")
-    PromiseCombiner pc = new PromiseCombiner();
+    var pc = new PromiseCombiner();
 
     try {
       connections.keySet().stream().map(this::disconnect).forEach(pc::add);

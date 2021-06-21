@@ -18,7 +18,7 @@ public interface DTLSHandler extends ChannelHandler {
    * @return a future representing the state of the current handshake, or null if no handshake or
    *     connection is ongoing
    */
-  public Future<Channel> handshakeFuture();
+  Future<Channel> handshakeFuture();
 
   /**
    * Get the close future for this handler
@@ -26,12 +26,12 @@ public interface DTLSHandler extends ChannelHandler {
    * @return a future representing the state of the current connection, or null if no connection is
    *     ongoing
    */
-  public Future<Void> closeFuture();
+  Future<Void> closeFuture();
 
   /**
    * Get the address of the remote peer which this Handler is for
    *
    * @return the remote address, or null if this hander is not yet connected
    */
-  public SocketAddress getRemotePeerAddress();
+  SocketAddress getRemotePeerAddress();
 }

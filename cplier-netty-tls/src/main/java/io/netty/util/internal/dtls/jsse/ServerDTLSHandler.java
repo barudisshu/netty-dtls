@@ -5,12 +5,14 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.socket.DatagramPacket;
 import io.netty.util.internal.dtls.adapter.DtlsEngine;
 import io.netty.util.internal.tls.DTLSHandler;
+import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.tls.ContentType;
 import org.bouncycastle.tls.HandshakeType;
 
 import java.net.InetSocketAddress;
 import java.util.List;
 
+@Slf4j
 public class ServerDTLSHandler extends BaseDTLSHandler implements DTLSHandler {
 
   public ServerDTLSHandler(DtlsEngine engine) {
@@ -24,12 +26,10 @@ public class ServerDTLSHandler extends BaseDTLSHandler implements DTLSHandler {
 
   @Override
   public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-
     if (remotePeer == null) {
       DatagramPacket dp = (DatagramPacket) msg;
       remotePeer = dp.sender();
     }
-
     super.channelRead(ctx, msg);
   }
 

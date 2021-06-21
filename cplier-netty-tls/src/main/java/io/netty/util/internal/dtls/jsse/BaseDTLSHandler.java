@@ -9,11 +9,10 @@ import io.netty.util.concurrent.*;
 import io.netty.util.internal.dtls.adapter.DtlsEngine;
 import io.netty.util.internal.dtls.adapter.DtlsEngineResult;
 import io.netty.util.internal.dtls.adapter.DtlsEngineResult.OperationRequired;
+import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.tls.ContentType;
 import org.bouncycastle.tls.ProtocolVersion;
 import org.bouncycastle.util.Arrays;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.SSLException;
 import java.io.IOException;
@@ -27,21 +26,19 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-public abstract class BaseDTLSHandler extends ChannelDuplexHandler
-    implements InternalDTLSHandler {
-
-  private static final Logger LOG = LoggerFactory.getLogger(BaseDTLSHandler.class);
+@Slf4j
+public abstract class BaseDTLSHandler extends ChannelDuplexHandler implements InternalDTLSHandler {
 
   protected final DtlsEngine sslEngine;
 
   private final boolean embedded;
 
-  protected volatile ChannelHandlerContext ctx;
+  protected ChannelHandlerContext ctx;
 
   private final List<ByteBuf> retransmitBuffer = new ArrayList<>();
 
-  private static final int RETRANSMIT_TIMEOUT_MILLIS = 100_0000;
-  private static final int CONNECTION_TIMEOUT_MILLIS = 10000_0000;
+  private static final long RETRANSMIT_TIMEOUT_MILLIS = 100_0000L;
+  private static final long CONNECTION_TIMEOUT_MILLIS = 10000_0000L;
 
   private ScheduledFuture<?> retransmitTimer;
 
@@ -53,7 +50,7 @@ public abstract class BaseDTLSHandler extends ChannelDuplexHandler
 
   protected final Promise<Void> closePromise;
 
-  protected volatile InetSocketAddress remotePeer;
+  protected InetSocketAddress remotePeer;
 
   protected boolean closed;
 
@@ -78,8 +75,7 @@ public abstract class BaseDTLSHandler extends ChannelDuplexHandler
     this.closePromise = new LateBindingPromise<>();
   }
 
-  BaseDTLSHandler(
-      DtlsEngine engine, ChannelHandlerContext ctx, InetSocketAddress remotePeer) {
+  BaseDTLSHandler(DtlsEngine engine, ChannelHandlerContext ctx, InetSocketAddress remotePeer) {
     this.sslEngine = engine;
     this.embedded = true;
     handshakePromise = ctx.executor().newPromise();
@@ -105,7 +101,7 @@ public abstract class BaseDTLSHandler extends ChannelDuplexHandler
 
     if (remotePeer != null) {
       if (!remotePeer.equals(remoteAddress)) {
-        LOG.error(
+        log.error(
             "The channel {} is connected to {} but the DTLS session is already paired with {}",
             ctx.channel(),
             remoteAddress,
@@ -118,13 +114,13 @@ public abstract class BaseDTLSHandler extends ChannelDuplexHandler
   }
 
   @Override
-  public void handlerRemoved(ChannelHandlerContext ctx) throws Exception {
+  public void handlerRemoved(ChannelHandlerContext ctx) {
     close(ctx, true);
   }
 
   @Override
-  public void disconnect(ChannelHandlerContext ctx, ChannelPromise promise) throws Exception {
-    LOG.debug(
+  public void disconnect(ChannelHandlerContext ctx, ChannelPromise promise) {
+    log.debug(
         "The connection to {} is being disconnected and so the DTLS session is being closed",
         remotePeer);
     Future<Void> close = close(ctx, true);
@@ -139,7 +135,7 @@ public abstract class BaseDTLSHandler extends ChannelDuplexHandler
 
   @Override
   public void close(ChannelHandlerContext ctx, ChannelPromise promise) {
-    LOG.debug(
+    log.debug(
         "The channel {} is being closed and so the DTLS session is being closed", ctx.channel());
     close(ctx, true).addListener(f -> ctx.close(promise));
   }
@@ -197,7 +193,7 @@ public abstract class BaseDTLSHandler extends ChannelDuplexHandler
     var registerHandshake = false;
     if (remotePeer != null) {
       if (!remotePeer.equals(remote)) {
-        LOG.error(
+        log.error(
             "The channel {} is being connected to {} but the DTLS session is already paired with {}",
             ctx.channel(),
             remoteAddress,
@@ -229,11 +225,9 @@ public abstract class BaseDTLSHandler extends ChannelDuplexHandler
   }
 
   @Override
-  public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise)
-      throws Exception {
-
+  public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) {
     if (remotePeer == null) {
-      LOG.error(
+      log.error(
           "The DTLS handler for channel {} is not configured with or connected to a remote address",
           ctx.channel());
       promise.tryFailure(new IllegalStateException("This channel is not yet connected"));
@@ -246,7 +240,7 @@ public abstract class BaseDTLSHandler extends ChannelDuplexHandler
     } else if (msg instanceof DatagramPacket) {
       DatagramPacket dp = (DatagramPacket) msg;
       if (!dp.recipient().equals(remotePeer)) {
-        LOG.error(
+        log.error(
             "A message is being sent using channel {} to {} but the DTLS session is paired with {}",
             ctx.channel(),
             dp.recipient(),
@@ -272,7 +266,7 @@ public abstract class BaseDTLSHandler extends ChannelDuplexHandler
         doFlush = false;
       }
     } else {
-      LOG.error(
+      log.error(
           "The DTLS connection from {} to {} is not yet finished handshaking so no data can be sent",
           ctx.channel().localAddress(),
           remotePeer);
@@ -283,22 +277,17 @@ public abstract class BaseDTLSHandler extends ChannelDuplexHandler
 
   private void generateDataToSend(
       ChannelHandlerContext ctx, ByteBuf appPlaintext, ChannelPromise promise) {
-
-    if (LOG.isDebugEnabled()) {
-      LOG.debug("Sending {} bytes of plaintext to {}", appPlaintext.readableBytes(), remotePeer);
-    }
+    log.debug("Sending {} bytes of plaintext to {}", appPlaintext.readableBytes(), remotePeer);
 
     ByteBuf output = ctx.alloc().buffer(appPlaintext.readableBytes() + 64);
     try {
-      boolean overflow = false;
-
-      loop:
+      var overflow = false;
       while (appPlaintext.isReadable()) {
         DtlsEngineResult result;
         try {
           result = sslEngine.generateDataToSend(appPlaintext, output);
         } catch (Exception e) {
-          LOG.error("Failed to send data to {}", remotePeer, e);
+          log.error("Failed to send data to {}", remotePeer, e);
           promise.setFailure(e);
           if (embedded) {
             close(ctx, true);
@@ -307,11 +296,10 @@ public abstract class BaseDTLSHandler extends ChannelDuplexHandler
           }
           return;
         }
-
         switch (result.getOperationResult()) {
           case TOO_MUCH_OUTPUT:
             if (overflow) {
-              LOG.error(
+              log.error(
                   "Multiple successive buffer overflows have occurred in the connection to {}",
                   remotePeer);
               if (embedded) {
@@ -320,29 +308,29 @@ public abstract class BaseDTLSHandler extends ChannelDuplexHandler
                 close(ctx, ctx.newPromise());
               }
               promise.tryFailure(new SSLException("Repeated overflows have occurred"));
-              break loop;
+              break;
             }
 
-            if (LOG.isDebugEnabled()) {
-              LOG.debug("Overflowed the output buffer, re-allocating");
+            if (log.isDebugEnabled()) {
+              log.debug("Overflowed the output buffer, re-allocating");
             }
 
             output = resizedOutputBuffer(ctx, sslEngine.getMaxSendOutputBufferSize(), output);
-            continue loop;
+            continue;
           case INSUFFICIENT_INPUT:
-            LOG.error("An underflow occurred when sending data to {}", remotePeer);
+            log.error("An underflow occurred when sending data to {}", remotePeer);
             if (embedded) {
               close(ctx, true);
             } else {
               close(ctx, ctx.newPromise());
             }
             promise.tryFailure(new SSLException("An unexpected underflow has occurred"));
-            break loop;
+            break;
           case ENGINE_CLOSED:
             var ise = new IllegalStateException("The engine is now closed");
             pendingWrites.values().forEach(cp -> cp.tryFailure(ise));
             promise.tryFailure(ise);
-            break loop;
+            break;
           case OK:
             ctx.write(
                 new DatagramPacket(output.readRetainedSlice(output.readableBytes()), remotePeer),
@@ -362,21 +350,19 @@ public abstract class BaseDTLSHandler extends ChannelDuplexHandler
   @SuppressWarnings("deprecation")
   private ChannelFuture processOperationRequired(
       ChannelHandlerContext ctx, OperationRequired operationRequired) {
-
     PromiseCombiner combiner = null;
     ChannelFuture cf = null;
-
     handshake_loop:
     for (; ; ) {
       switch (operationRequired) {
         case NONE:
           if (!handshakePromise.isDone()) {
-            LOG.debug("Completing the initial handshake");
+            log.debug("Completing the initial handshake");
             handshakePromise.trySuccess(ctx.channel());
           }
           break handshake_loop;
         case RUN_TASK:
-          LOG.debug("Running tasks for the SSL engine");
+          log.debug("Running tasks for the SSL engine");
           runTasks();
           operationRequired = sslEngine.getOperationRequired();
           continue handshake_loop;
@@ -384,7 +370,7 @@ public abstract class BaseDTLSHandler extends ChannelDuplexHandler
           // This will happen when we next receive data
           break handshake_loop;
         case DATA_TO_SEND:
-          LOG.debug("Generating handshake data to send to {}", remotePeer);
+          log.debug("Generating handshake data to send to {}", remotePeer);
           ChannelFuture tmp = handshakeWrap(ctx);
 
           if (cf == null) {
@@ -401,7 +387,7 @@ public abstract class BaseDTLSHandler extends ChannelDuplexHandler
           operationRequired = sslEngine.getOperationRequired();
           continue handshake_loop;
         case PENDING_RECEIVED_DATA:
-          LOG.debug("Additional data from {} must be unwrapped", remotePeer);
+          log.debug("Additional data from {} must be unwrapped", remotePeer);
           handleIncomingData(
               ctx,
               new DatagramPacket(
@@ -413,7 +399,7 @@ public abstract class BaseDTLSHandler extends ChannelDuplexHandler
           operationRequired = sslEngine.getOperationRequired();
           continue handshake_loop;
         default:
-          LOG.error(
+          log.error(
               "The OperationRequired status {} for the connection to {} is not understood",
               operationRequired,
               remotePeer);
@@ -442,7 +428,7 @@ public abstract class BaseDTLSHandler extends ChannelDuplexHandler
             .schedule(
                 () -> {
                   if (!retransmitBuffer.isEmpty()) {
-                    LOG.debug(
+                    log.debug(
                         "Retransmitting unacknowledged handshake data - repeat {}", cycle + 1);
                     retransmitBuffer.forEach(
                         b ->
@@ -459,15 +445,12 @@ public abstract class BaseDTLSHandler extends ChannelDuplexHandler
 
   @Override
   public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-
     if (msg instanceof DatagramPacket) {
       DatagramPacket dp = (DatagramPacket) msg;
-
       ByteBuf encrypted = dp.content();
       InetSocketAddress sender = dp.sender();
-
       if (!sender.equals(remotePeer)) {
-        LOG.warn(
+        log.warn(
             "The packet was received from {} but this DTLS connection is with {}. Discarding it",
             sender,
             remotePeer);
@@ -476,7 +459,7 @@ public abstract class BaseDTLSHandler extends ChannelDuplexHandler
 
       try {
         if (!encrypted.isReadable()) {
-          LOG.warn("The packet received was empty. Discarding it", sender, remotePeer);
+          log.warn("The packet received was empty. Discarding it");
         } else {
           handleIncomingData(ctx, dp, encrypted, false);
           if (doFlush) {
@@ -489,7 +472,7 @@ public abstract class BaseDTLSHandler extends ChannelDuplexHandler
       }
 
     } else {
-      LOG.error(
+      log.error(
           "The message received was not a DatagramPacket. It was a {}",
           msg == null ? null : msg.getClass());
     }
@@ -502,9 +485,8 @@ public abstract class BaseDTLSHandler extends ChannelDuplexHandler
         ctx.alloc().buffer(unwrapAgain ? maxReceiveOutputBufferSize : encrypted.readableBytes());
 
     try {
-      boolean overflow = false;
+      var overflow = false;
 
-      outer_loop:
       while (unwrapAgain || encrypted.isReadable()) {
 
         int encryptedReaderIndex = encrypted.readerIndex();
@@ -516,7 +498,7 @@ public abstract class BaseDTLSHandler extends ChannelDuplexHandler
               sslEngine.handleReceivedData(
                   unwrapAgain ? Unpooled.EMPTY_BUFFER : encrypted, decrypted);
         } catch (Exception exception) {
-          LOG.error("Failed to receive data from {}", dp.sender(), exception);
+          log.error("Failed to receive data from {}", dp.sender(), exception);
           if (embedded) {
             close(ctx, true);
           } else {
@@ -525,12 +507,12 @@ public abstract class BaseDTLSHandler extends ChannelDuplexHandler
           return;
         }
 
-        boolean close = false;
+        var close = false;
 
         switch (result.getOperationResult()) {
           case TOO_MUCH_OUTPUT:
             if (overflow) {
-              LOG.error(
+              log.error(
                   "Multiple successive buffer overflows have occurred receiving data from {}. Ignoring the packet",
                   remotePeer);
               return;
@@ -538,9 +520,9 @@ public abstract class BaseDTLSHandler extends ChannelDuplexHandler
             overflow = true;
 
             decrypted = resizedOutputBuffer(ctx, maxReceiveOutputBufferSize, decrypted);
-            continue outer_loop;
+            continue;
           case INSUFFICIENT_INPUT:
-            LOG.error(
+            log.error(
                 "A buffer underflow has occurred receiving data from {}. Ignoring the packet",
                 remotePeer);
             // Just abandon the packet
@@ -550,7 +532,7 @@ public abstract class BaseDTLSHandler extends ChannelDuplexHandler
             // Fall through
           case OK:
             if (!retransmitBuffer.isEmpty() && !unwrapAgain) {
-              LOG.debug("Attempting to remove values from the retransmission buffer");
+              log.debug("Attempting to remove values from the retransmission buffer");
               clearRetransmitBuffer(
                   encrypted.slice(encryptedReaderIndex, encrypted.readerIndex()), retransmitBuffer);
               if (retransmitBuffer.isEmpty() && retransmitTimer != null) {
@@ -574,15 +556,16 @@ public abstract class BaseDTLSHandler extends ChannelDuplexHandler
           if (embedded) {
             close(ctx, true);
           } else {
+            log.debug("The channel {} is closed by sending command [Q]", ctx.channel());
             close(ctx, ctx.newPromise());
           }
-          break outer_loop;
+          break;
         }
 
         if (!unwrapAgain) {
           processOperationRequired(ctx, result.getOperationRequired());
         } else {
-          break outer_loop;
+          break;
         }
       }
     } finally {
@@ -618,11 +601,11 @@ public abstract class BaseDTLSHandler extends ChannelDuplexHandler
         if (remotePeer == null) {
           remotePeer = (InetSocketAddress) ctx.channel().remoteAddress();
           if (remotePeer == null) {
-            LOG.error("No remote peer has been defined for the DTLS");
+            log.error("No remote peer has been defined for the DTLS");
           }
         }
 
-        LOG.debug("Beginning outgoing handshake with remote peer {}", remotePeer);
+        log.debug("Beginning outgoing handshake with remote peer {}", remotePeer);
         try {
           sslEngine.startHandshaking();
 
@@ -637,7 +620,8 @@ public abstract class BaseDTLSHandler extends ChannelDuplexHandler
                           processOperationRequired(ctx, sslEngine.getOperationRequired());
                           handshakeWrap(ctx);
                         }
-                      }, CONNECTION_TIMEOUT_MILLIS,
+                      },
+                      CONNECTION_TIMEOUT_MILLIS,
                       TimeUnit.MILLISECONDS);
 
           handshakePromise.addListener(
@@ -652,11 +636,11 @@ public abstract class BaseDTLSHandler extends ChannelDuplexHandler
           ctx.flush();
           doFlush = false;
         } catch (Exception e) {
-          LOG.error("Failed to start a handshake with {}", remotePeer);
+          log.error("Failed to start a handshake with {}", remotePeer);
           handshakePromise.tryFailure(e);
         }
       } else {
-        LOG.error("Unable to begin a handshake from a server SSLEngine");
+        log.error("Unable to begin a handshake from a server SSLEngine");
         throw new IllegalStateException("Unable to begin a handshake from a server SSLEngine");
       }
     }
@@ -687,7 +671,7 @@ public abstract class BaseDTLSHandler extends ChannelDuplexHandler
           result = sslEngine.generateDataToSend(Unpooled.EMPTY_BUFFER, output);
         } catch (Exception e) {
           handshakePromise.tryFailure(e);
-          LOG.error("Failed to handshake with {}", remotePeer, e);
+          log.error("Failed to handshake with {}", remotePeer, e);
           if (embedded) {
             close(ctx, true);
           } else {
@@ -699,7 +683,7 @@ public abstract class BaseDTLSHandler extends ChannelDuplexHandler
         switch (result.getOperationResult()) {
           case TOO_MUCH_OUTPUT:
             if (overflow) {
-              LOG.error(
+              log.error(
                   "Multiple successive buffer overflows have occurred receiving data from {}. Ignoring the packet",
                   remotePeer);
               if (embedded) {
@@ -714,7 +698,7 @@ public abstract class BaseDTLSHandler extends ChannelDuplexHandler
             output = resizedOutputBuffer(ctx, maxSendOutputBufferSize, output);
             continue loop;
           case INSUFFICIENT_INPUT:
-            LOG.error("An underflow occurred when sending handshake data to {}", remotePeer);
+            log.error("An underflow occurred when sending handshake data to {}", remotePeer);
             if (embedded) {
               close(ctx, true);
             } else {
