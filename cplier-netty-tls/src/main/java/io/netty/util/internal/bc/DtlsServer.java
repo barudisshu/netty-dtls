@@ -78,11 +78,11 @@ public class DtlsServer extends DefaultTlsServer {
     }
 
     Vector certificateAuthorities = new Vector();
-//    certificateAuthorities.addElement(CertificateRequest.parse(context, sslContext.getCaPath()));
-//    certificateAuthorities.addElement(
-//        CertificateRequest.parse(context, sslContext.getCertificatePath()));
-//    certificateAuthorities.addElement(
-//        CertificateRequest.parse(context, sslContext.getPrivateKeyPath()));
+    certificateAuthorities.addElement(CertificateRequest.parse(context, Thread.currentThread().getContextClassLoader().getResourceAsStream("openssl/ca.crt")));
+    certificateAuthorities.addElement(
+        CertificateRequest.parse(context, Thread.currentThread().getContextClassLoader().getResourceAsStream("openssl/client.crt")));
+    certificateAuthorities.addElement(
+        CertificateRequest.parse(context, Thread.currentThread().getContextClassLoader().getResourceAsStream("openssl/client.key")));
 
     return new CertificateRequest(certificateTypes, serverSigAlgs, certificateAuthorities);
   }
@@ -119,12 +119,12 @@ public class DtlsServer extends DefaultTlsServer {
 //        "x509-server-key-rsa-enc.pem");
 //  }
 
-//  @Override
-//  protected TlsCredentialedSigner getRSASignerCredentials() throws IOException {
-//    Vector clientSigAlgs = context.getSecurityParametersHandshake().getClientSigAlgs();
-//
-//    return TlsUtils.loadSignerCredentialsServer(context, clientSigAlgs, SignatureAlgorithm.rsa);
-//  }
+  @Override
+  protected TlsCredentialedSigner getRSASignerCredentials() throws IOException {
+    Vector clientSigAlgs = context.getSecurityParametersHandshake().getClientSigAlgs();
+
+    return TlsUtils.loadSignerCredentialsServer(context, clientSigAlgs, SignatureAlgorithm.rsa);
+  }
 
   protected String hex(byte[] data) {
     return data == null ? "(null)" : Hex.toHexString(data);
