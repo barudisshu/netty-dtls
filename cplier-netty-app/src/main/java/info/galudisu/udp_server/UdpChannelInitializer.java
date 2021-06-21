@@ -3,6 +3,8 @@ package info.galudisu.udp_server;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.socket.DatagramChannel;
+import io.netty.util.internal.bc.DtlsServer;
+import io.netty.util.internal.bc.DtlsServerHandler;
 import io.netty.util.internal.dtls.adapter.JdkDtlsEngineAdapter;
 import io.netty.util.internal.dtls.jsse.ServerDTLSHandler;
 
@@ -21,8 +23,9 @@ public class UdpChannelInitializer extends ChannelInitializer<DatagramChannel> {
   @Override
   protected void initChannel(DatagramChannel ch) {
     ChannelPipeline pipeline = ch.pipeline();
-    var engine = createSSLEngine(sslContext);
-    pipeline.addLast(new ServerDTLSHandler(new JdkDtlsEngineAdapter(engine)));
+//    var engine = createSSLEngine(sslContext);
+//    pipeline.addLast(new ServerDTLSHandler(new JdkDtlsEngineAdapter(engine)));
+    pipeline.addLast(new DtlsServerHandler(new DtlsServer(sslContext)));
     pipeline.addLast(new UdpServerHandler());
     pipeline.addLast(new UdpSenderHandler());
   }
