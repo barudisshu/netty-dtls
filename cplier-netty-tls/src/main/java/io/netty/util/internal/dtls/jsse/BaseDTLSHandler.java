@@ -27,10 +27,10 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-public abstract class ParemusBaseDTLSHandler extends ChannelDuplexHandler
+public abstract class BaseDTLSHandler extends ChannelDuplexHandler
     implements InternalDTLSHandler {
 
-  private static final Logger LOG = LoggerFactory.getLogger(ParemusBaseDTLSHandler.class);
+  private static final Logger LOG = LoggerFactory.getLogger(BaseDTLSHandler.class);
 
   protected final DtlsEngine sslEngine;
 
@@ -40,8 +40,8 @@ public abstract class ParemusBaseDTLSHandler extends ChannelDuplexHandler
 
   private final List<ByteBuf> retransmitBuffer = new ArrayList<>();
 
-  private int retransmitTimeoutMillis = 100_0000;
-  private int connectionTimeoutMillis = 10000_0000;
+  private static final int RETRANSMIT_TIMEOUT_MILLIS = 100_0000;
+  private static final int CONNECTION_TIMEOUT_MILLIS = 10000_0000;
 
   private ScheduledFuture<?> retransmitTimer;
 
@@ -71,14 +71,14 @@ public abstract class ParemusBaseDTLSHandler extends ChannelDuplexHandler
     }
   }
 
-  public ParemusBaseDTLSHandler(DtlsEngine engine) {
+  protected BaseDTLSHandler(DtlsEngine engine) {
     this.sslEngine = engine;
     this.embedded = false;
     this.handshakePromise = new LateBindingPromise<>();
     this.closePromise = new LateBindingPromise<>();
   }
 
-  ParemusBaseDTLSHandler(
+  BaseDTLSHandler(
       DtlsEngine engine, ChannelHandlerContext ctx, InetSocketAddress remotePeer) {
     this.sslEngine = engine;
     this.embedded = true;
@@ -194,7 +194,7 @@ public abstract class ParemusBaseDTLSHandler extends ChannelDuplexHandler
 
     InetSocketAddress remote = (InetSocketAddress) remoteAddress;
 
-    boolean registerHandshake = false;
+    var registerHandshake = false;
     if (remotePeer != null) {
       if (!remotePeer.equals(remote)) {
         LOG.error(
@@ -339,7 +339,7 @@ public abstract class ParemusBaseDTLSHandler extends ChannelDuplexHandler
             promise.tryFailure(new SSLException("An unexpected underflow has occurred"));
             break loop;
           case ENGINE_CLOSED:
-            IllegalStateException ise = new IllegalStateException("The engine is now closed");
+            var ise = new IllegalStateException("The engine is now closed");
             pendingWrites.values().forEach(cp -> cp.tryFailure(ise));
             promise.tryFailure(ise);
             break loop;
@@ -453,7 +453,7 @@ public abstract class ParemusBaseDTLSHandler extends ChannelDuplexHandler
                     scheduleRetransmission(ctx, cycle + 1);
                   }
                 },
-                retransmitTimeoutMillis << cycle,
+                RETRANSMIT_TIMEOUT_MILLIS << cycle,
                 TimeUnit.MILLISECONDS);
   }
 
@@ -637,8 +637,7 @@ public abstract class ParemusBaseDTLSHandler extends ChannelDuplexHandler
                           processOperationRequired(ctx, sslEngine.getOperationRequired());
                           handshakeWrap(ctx);
                         }
-                      },
-                      connectionTimeoutMillis,
+                      }, CONNECTION_TIMEOUT_MILLIS,
                       TimeUnit.MILLISECONDS);
 
           handshakePromise.addListener(

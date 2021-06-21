@@ -51,7 +51,7 @@ public class CertificateSigningRequestSubmitter {
         conn.setRequestMethod("POST");
         conn.setRequestProperty("Accept", "text/plain;charset=utf-8");
         conn.setRequestProperty("Content-Type", "text/plain;charset=utf-8");
-        conn.setRequestProperty("Paremus-One-Time-Token", oneTimePasscode);
+        conn.setRequestProperty("One-Time-Token", oneTimePasscode);
         conn.connect();
 
         try (BufferedWriter bw =

@@ -11,13 +11,13 @@ import org.bouncycastle.tls.HandshakeType;
 import java.net.InetSocketAddress;
 import java.util.List;
 
-public class ParemusServerDTLSHandler extends ParemusBaseDTLSHandler implements DTLSHandler {
+public class ServerDTLSHandler extends BaseDTLSHandler implements DTLSHandler {
 
-  public ParemusServerDTLSHandler(DtlsEngine engine) {
+  public ServerDTLSHandler(DtlsEngine engine) {
     super(engine);
   }
 
-  ParemusServerDTLSHandler(
+  ServerDTLSHandler(
       DtlsEngine engine, ChannelHandlerContext ctx, InetSocketAddress remotePeer) {
     super(engine, ctx, remotePeer);
   }

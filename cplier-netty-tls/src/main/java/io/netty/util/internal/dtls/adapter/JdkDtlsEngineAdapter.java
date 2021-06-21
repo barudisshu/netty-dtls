@@ -66,7 +66,7 @@ public class JdkDtlsEngineAdapter implements DtlsEngine {
   }
 
   @Override
-  public SSLParameters getSSLparameters() {
+  public SSLParameters getSSLParameters() {
     return engine.getSSLParameters();
   }
 

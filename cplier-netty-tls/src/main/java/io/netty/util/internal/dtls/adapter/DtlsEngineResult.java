@@ -10,7 +10,7 @@ public interface DtlsEngineResult {
     INSUFFICIENT_INPUT,
     TOO_MUCH_OUTPUT,
     OK,
-    ENGINE_CLOSED;
+    ENGINE_CLOSED
   }
 
   enum OperationRequired {
@@ -18,6 +18,6 @@ public interface DtlsEngineResult {
     RUN_TASK,
     DATA_TO_SEND,
     AWAITING_DATA,
-    PENDING_RECEIVED_DATA;
+    PENDING_RECEIVED_DATA
   }
 }

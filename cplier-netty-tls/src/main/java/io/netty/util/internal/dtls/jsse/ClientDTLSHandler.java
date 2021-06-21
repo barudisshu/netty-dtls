@@ -6,25 +6,23 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.util.concurrent.Future;
 import io.netty.util.internal.dtls.adapter.DtlsEngine;
 import io.netty.util.internal.tls.DTLSClientHandler;
+import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.tls.ContentType;
 import org.bouncycastle.tls.HandshakeType;
 import org.bouncycastle.tls.ProtocolVersion;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.List;
 
-public class ParemusClientDTLSHandler extends ParemusBaseDTLSHandler implements DTLSClientHandler {
+@Slf4j
+public class ClientDTLSHandler extends BaseDTLSHandler implements DTLSClientHandler {
 
-  private static final Logger LOG = LoggerFactory.getLogger(ParemusClientDTLSHandler.class);
-
-  public ParemusClientDTLSHandler(DtlsEngine engine) {
+  public ClientDTLSHandler(DtlsEngine engine) {
     super(engine);
   }
 
-  public ParemusClientDTLSHandler(
+  public ClientDTLSHandler(
       DtlsEngine engine, ChannelHandlerContext ctx, InetSocketAddress remotePeer) {
     super(engine, ctx, remotePeer);
   }
@@ -40,12 +38,12 @@ public class ParemusClientDTLSHandler extends ParemusBaseDTLSHandler implements 
   public Future<Channel> handshake(SocketAddress socketAddress) {
     ChannelHandlerContext ctx = this.ctx;
     if (ctx == null) {
-      LOG.error("This handler has not been added to a Channel");
+      log.error("This handler has not been added to a Channel");
     }
     if (remotePeer == null) {
       remotePeer = (InetSocketAddress) socketAddress;
     } else if (!remotePeer.equals(socketAddress)) {
-      LOG.error("This handler is already bound to {}", remotePeer);
+      log.error("This handler is already bound to {}", remotePeer);
       return ctx.executor()
           .newFailedFuture(
               new IllegalStateException("This handler is already bound to " + remotePeer));

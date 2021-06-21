@@ -83,7 +83,7 @@ public interface SecurityDomainManager {
   /**
    * Issue a certificate signing request to a remote URL using the supplied trust chain.
    *
-   * <p>The request is a POST operation which sends a <code>Paremus-One-Time-Token</code> header
+   * <p>The request is a POST operation which sends a <code>One-Time-Token</code> header
    * containing the one time passcode and the encoded certificates as the body of the request.
    *
    * <p>The request and response content type are both <code>text/plain;charset=utf-8</code>

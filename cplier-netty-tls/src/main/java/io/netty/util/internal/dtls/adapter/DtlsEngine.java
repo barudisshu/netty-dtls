@@ -16,7 +16,7 @@ public interface DtlsEngine {
 
   void closeOutbound();
 
-  SSLParameters getSSLparameters();
+  SSLParameters getSSLParameters();
 
   int getMaxSendOutputBufferSize();
 

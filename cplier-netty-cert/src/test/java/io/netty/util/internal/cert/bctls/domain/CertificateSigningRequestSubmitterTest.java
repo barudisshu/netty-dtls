@@ -99,7 +99,7 @@ class CertificateSigningRequestSubmitterTest {
     @POST
     @Consumes("text/plain")
     @Produces("text/plain")
-    public String sign(@HeaderParam("Paremus-One-Time-Token") String token, String body) {
+    public String sign(@HeaderParam("One-Time-Token") String token, String body) {
 
       if (!"SECRET".equals(token)) {
         throw new WebApplicationException(Status.FORBIDDEN);

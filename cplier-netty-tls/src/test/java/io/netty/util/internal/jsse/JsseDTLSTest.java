@@ -7,8 +7,8 @@ import io.netty.channel.ChannelInitializer;
 import io.netty.channel.socket.DatagramPacket;
 import io.netty.util.concurrent.Future;
 import io.netty.util.internal.dtls.adapter.JdkDtlsEngineAdapter;
-import io.netty.util.internal.dtls.jsse.ParemusClientDTLSHandler;
-import io.netty.util.internal.dtls.jsse.ParemusServerDTLSHandler;
+import io.netty.util.internal.dtls.jsse.ClientDTLSHandler;
+import io.netty.util.internal.dtls.jsse.ServerDTLSHandler;
 import io.netty.util.internal.test.AbstractDTLSTest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -52,7 +52,7 @@ class JsseDTLSTest extends AbstractDTLSTest {
 
         SSLEngine engine = instance.createSSLEngine();
         engine.setUseClientMode(true);
-        ch.pipeline().addFirst(new ParemusClientDTLSHandler(new JdkDtlsEngineAdapter(engine)));
+        ch.pipeline().addFirst(new ClientDTLSHandler(new JdkDtlsEngineAdapter(engine)));
       }
     });
 
@@ -66,7 +66,7 @@ class JsseDTLSTest extends AbstractDTLSTest {
 
         SSLEngine engine = instance.createSSLEngine();
         engine.setUseClientMode(false);
-        ch.pipeline().addFirst(new ParemusServerDTLSHandler(new JdkDtlsEngineAdapter(engine)));
+        ch.pipeline().addFirst(new ServerDTLSHandler(new JdkDtlsEngineAdapter(engine)));
       }
     });
 
@@ -81,11 +81,11 @@ class JsseDTLSTest extends AbstractDTLSTest {
     alice.connect(bob.localAddress()).sync();
 
     Future<Channel> handshakeFuture =
-        alice.pipeline().get(ParemusClientDTLSHandler.class).handshakeFuture();
+        alice.pipeline().get(ClientDTLSHandler.class).handshakeFuture();
     assertTrue(handshakeFuture.await(1000));
     handshakeFuture.get(0, TimeUnit.MILLISECONDS);
 
-    handshakeFuture = bob.pipeline().get(ParemusServerDTLSHandler.class).handshakeFuture();
+    handshakeFuture = bob.pipeline().get(ServerDTLSHandler.class).handshakeFuture();
     assertTrue(handshakeFuture.await(1000));
     handshakeFuture.get(0, TimeUnit.MILLISECONDS);
 

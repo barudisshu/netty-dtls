@@ -8,9 +8,8 @@ import io.netty.util.ReferenceCountUtil;
 import io.netty.util.concurrent.*;
 import io.netty.util.internal.dtls.adapter.DtlsEngine;
 import io.netty.util.internal.tls.MultiplexingDTLSHandler;
+import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.tls.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -24,9 +23,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-public class ParemusDTLSHandler extends ChannelDuplexHandler implements MultiplexingDTLSHandler {
-
-  private static final Logger LOG = LoggerFactory.getLogger(ParemusDTLSHandler.class);
+@Slf4j
+public class HandshakeDTLSHandler extends ChannelDuplexHandler implements MultiplexingDTLSHandler {
 
   private static class ConnectionDetails {
     final boolean isClient;
@@ -53,7 +51,7 @@ public class ParemusDTLSHandler extends ChannelDuplexHandler implements Multiple
 
   private ChannelHandlerContext ctx;
 
-  public ParemusDTLSHandler(Supplier<DtlsEngine> engineSupplier) {
+  public HandshakeDTLSHandler(Supplier<DtlsEngine> engineSupplier) {
     this.engineSupplier = engineSupplier;
   }
 
@@ -72,8 +70,8 @@ public class ParemusDTLSHandler extends ChannelDuplexHandler implements Multiple
             .collect(Collectors.toList());
 
     if (!toClose.isEmpty()) {
-      if (LOG.isDebugEnabled()) {
-        LOG.debug("Disconnecting idle DTLS sessions for remote endpoints {}", toClose);
+      if (log.isDebugEnabled()) {
+        log.debug("Disconnecting idle DTLS sessions for remote endpoints {}", toClose);
       }
 
       lastApplicationData.keySet().removeAll(toClose);
@@ -92,8 +90,8 @@ public class ParemusDTLSHandler extends ChannelDuplexHandler implements Multiple
 
     closing = true;
 
-    if (LOG.isDebugEnabled()) {
-      LOG.debug("Closing DTLS sessions for all remote endpoints.");
+    if (log.isDebugEnabled()) {
+      log.debug("Closing DTLS sessions for all remote endpoints.");
     }
 
     ChannelPromise pendingCloses = ctx.newPromise();
@@ -132,8 +130,7 @@ public class ParemusDTLSHandler extends ChannelDuplexHandler implements Multiple
         tlsEngine.setClient(true);
 
         connection =
-            new ConnectionDetails(
-                true, new ParemusClientDTLSHandler(tlsEngine, ctx, dp.recipient()));
+            new ConnectionDetails(true, new ClientDTLSHandler(tlsEngine, ctx, dp.recipient()));
         connections.put(recipient, connection);
 
         final ConnectionDetails pending = connection;
@@ -182,7 +179,7 @@ public class ParemusDTLSHandler extends ChannelDuplexHandler implements Multiple
       try {
         connection.handler.flush(ctx);
       } catch (Exception e1) {
-        LOG.warn(
+        log.warn(
             "An error occurred when flushing the pending write records for connection {} to {}",
             ctx.channel(),
             connection.handler.getRemotePeerAddress(),
@@ -217,8 +214,7 @@ public class ParemusDTLSHandler extends ChannelDuplexHandler implements Multiple
 
         DtlsEngine engine = engineSupplier.get();
         engine.setClient(false);
-        connection =
-            new ConnectionDetails(false, new ParemusServerDTLSHandler(engine, ctx, sender));
+        connection = new ConnectionDetails(false, new ServerDTLSHandler(engine, ctx, sender));
         connections.put(sender, connection);
 
         final ConnectionDetails pending = connection;
@@ -234,7 +230,7 @@ public class ParemusDTLSHandler extends ChannelDuplexHandler implements Multiple
           // This is an incoming handshake message - we need to look deeper
           short handshakeType = buf.getUnsignedByte(buf.readerIndex() + DTLS_RECORD_HEADER_LENGTH);
           if (handshakeType == HandshakeType.client_hello) {
-            LOG.debug(
+            log.debug(
                 "A race between connections with endpoint {} has been detected. Attempting to resolve it",
                 sender);
             connection = cleanUpClientRace(ctx, dp, sender, connection);
@@ -248,7 +244,7 @@ public class ParemusDTLSHandler extends ChannelDuplexHandler implements Multiple
         ReferenceCountUtil.safeRelease(msg);
       }
     } else {
-      LOG.warn(
+      log.warn(
           "The Multiplexing DTLS handler can only process DatagramPacket messages, not {}",
           msg == null ? null : msg.getClass());
       ReferenceCountUtil.safeRelease(msg);
@@ -272,13 +268,13 @@ public class ParemusDTLSHandler extends ChannelDuplexHandler implements Multiple
           if (length == 2) {
             level = buf.getUnsignedByte(index + DTLS_RECORD_HEADER_LENGTH);
             desc = buf.getUnsignedByte(index + DTLS_RECORD_HEADER_LENGTH + 1);
-            LOG.debug(
+            log.debug(
                 "Received a {} level alert with message {} from {} when there was no DTLS connection",
                 AlertLevel.getText(level),
                 AlertDescription.getText(desc),
                 sender);
           } else {
-            LOG.debug(
+            log.debug(
                 "Received an encrypted alert message from {} but there was no DTLS connection. Treating it as an internal warning alert",
                 sender);
             level = AlertLevel.warning;
@@ -304,7 +300,7 @@ public class ParemusDTLSHandler extends ChannelDuplexHandler implements Multiple
             ctx.writeAndFlush(new DatagramPacket(response, sender), ctx.voidPromise());
           }
         } else {
-          LOG.warn(
+          log.warn(
               "Received an unknown alert record from {} with length {}. It will be ignored",
               sender,
               length);
@@ -364,7 +360,7 @@ public class ParemusDTLSHandler extends ChannelDuplexHandler implements Multiple
     } else if (localAddress.getAddress().isAnyLocalAddress()) {
       // There's nothing we can do in this situation except hope to back off
       // so that we don't get another clash
-      LOG.warn(
+      log.warn(
           "Unable to resolve the DTLS connection race with {}. Closing the connection", sender);
       closeThisClient = true;
       openServer = false;
@@ -408,7 +404,7 @@ public class ParemusDTLSHandler extends ChannelDuplexHandler implements Multiple
     if (openServer) {
       DtlsEngine engine = engineSupplier.get();
       engine.setClient(false);
-      connection = new ConnectionDetails(false, new ParemusServerDTLSHandler(engine, ctx, sender));
+      connection = new ConnectionDetails(false, new ServerDTLSHandler(engine, ctx, sender));
       connection.pendingWrites.putAll(existingPendingWrites);
       connections.put(sender, connection);
       final ConnectionDetails pending = connection;
@@ -479,8 +475,8 @@ public class ParemusDTLSHandler extends ChannelDuplexHandler implements Multiple
       return details;
     }
 
-    if (LOG.isDebugEnabled()) {
-      LOG.debug("Sending a DTLS handshake to {}", socketAddress);
+    if (log.isDebugEnabled()) {
+      log.debug("Sending a DTLS handshake to {}", socketAddress);
     }
 
     lastApplicationData.put(socketAddress, Instant.now());
@@ -490,7 +486,7 @@ public class ParemusDTLSHandler extends ChannelDuplexHandler implements Multiple
 
     details =
         new ConnectionDetails(
-            true, new ParemusClientDTLSHandler(engine, ctx, (InetSocketAddress) socketAddress));
+            true, new ClientDTLSHandler(engine, ctx, (InetSocketAddress) socketAddress));
     connections.put(socketAddress, details);
 
     final ConnectionDetails finalDetails = details;
@@ -500,11 +496,11 @@ public class ParemusDTLSHandler extends ChannelDuplexHandler implements Multiple
     try {
       details.handler.channelActive(ctx);
     } catch (Exception e) {
-      LOG.warn("Failed to activate the connection to {}", socketAddress);
+      log.warn("Failed to activate the connection to {}", socketAddress);
       e.printStackTrace();
     }
 
-    if (LOG.isDebugEnabled()) {
+    if (log.isDebugEnabled()) {
       details
           .handler
           .handshakeFuture()
@@ -512,9 +508,9 @@ public class ParemusDTLSHandler extends ChannelDuplexHandler implements Multiple
               f -> {
                 if (connections.get(socketAddress) == finalDetails) {
                   if (f.isSuccess()) {
-                    LOG.debug("Successful outgoing handshake with {}", socketAddress);
+                    log.debug("Successful outgoing handshake with {}", socketAddress);
                   } else {
-                    LOG.debug("Failed outgoing handshake with {}", socketAddress);
+                    log.debug("Failed outgoing handshake with {}", socketAddress);
                   }
                 }
               });

@@ -3,7 +3,7 @@ package io.netty.util.internal.jsse;
 import io.netty.channel.ChannelHandler;
 import io.netty.util.internal.dtls.adapter.DtlsEngine;
 import io.netty.util.internal.dtls.adapter.JdkDtlsEngineAdapter;
-import io.netty.util.internal.dtls.jsse.ParemusDTLSHandler;
+import io.netty.util.internal.dtls.jsse.HandshakeDTLSHandler;
 import io.netty.util.internal.test.AbstractMultiplexingDTLSTest;
 
 import javax.net.ssl.*;
@@ -26,6 +26,6 @@ public class MultiplexingJsseDTLSTest extends AbstractMultiplexingDTLSTest {
           engine.setSSLParameters(parameters);
           return new JdkDtlsEngineAdapter(engine);
         };
-    return new ParemusDTLSHandler(sslEngineSupplier);
+    return new HandshakeDTLSHandler(sslEngineSupplier);
   }
 }

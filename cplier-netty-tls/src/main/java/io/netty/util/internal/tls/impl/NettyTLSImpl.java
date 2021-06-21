@@ -2,10 +2,13 @@ package io.netty.util.internal.tls.impl;
 
 import io.netty.handler.ssl.SslHandler;
 import io.netty.util.internal.dtls.adapter.JdkDtlsEngineAdapter;
+import io.netty.util.internal.dtls.jsse.ClientDTLSHandler;
+import io.netty.util.internal.dtls.jsse.HandshakeDTLSHandler;
+import io.netty.util.internal.dtls.jsse.ServerDTLSHandler;
 import io.netty.util.internal.tls.DTLSClientHandler;
 import io.netty.util.internal.tls.DTLSHandler;
 import io.netty.util.internal.tls.MultiplexingDTLSHandler;
-import io.netty.util.internal.tls.ParemusNettyTLS;
+import io.netty.util.internal.tls.NettyTLS;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.jsse.provider.BouncyCastleJsseProvider;
 import org.osgi.service.component.annotations.Activate;
@@ -22,7 +25,7 @@ import java.security.cert.CertificateException;
 import static org.osgi.service.component.annotations.ConfigurationPolicy.REQUIRE;
 
 @Component(configurationPid = "io.netty.util.internal.tls", configurationPolicy = REQUIRE)
-public class ParemusNettyTLSImpl implements ParemusNettyTLS {
+public class NettyTLSImpl implements NettyTLS {
 
   private final boolean insecure;
 
@@ -39,7 +42,7 @@ public class ParemusNettyTLSImpl implements ParemusNettyTLS {
   private final SSLParameters dtlsParameters;
 
   @Activate
-  public ParemusNettyTLSImpl(Config config) throws Exception {
+  public NettyTLSImpl(Config config) throws Exception {
 
     insecure = config.insecure();
 
@@ -167,7 +170,7 @@ public class ParemusNettyTLSImpl implements ParemusNettyTLS {
     if (insecure) {
       return null;
     }
-    return new io.netty.util.internal.dtls.jsse.ParemusDTLSHandler(
+    return new HandshakeDTLSHandler(
         () -> {
           SSLEngine engine = dtlsSslContext.createSSLEngine();
           engine.setSSLParameters(dtlsParameters);
@@ -184,7 +187,7 @@ public class ParemusNettyTLSImpl implements ParemusNettyTLS {
     engine.setSSLParameters(dtlsParameters);
     engine.setUseClientMode(true);
 
-    return new io.netty.util.internal.dtls.jsse.ParemusClientDTLSHandler(
+    return new ClientDTLSHandler(
         new JdkDtlsEngineAdapter(engine));
   }
 
@@ -197,7 +200,7 @@ public class ParemusNettyTLSImpl implements ParemusNettyTLS {
     engine.setSSLParameters(dtlsParameters);
     engine.setUseClientMode(false);
 
-    return new io.netty.util.internal.dtls.jsse.ParemusServerDTLSHandler(
+    return new ServerDTLSHandler(
         new JdkDtlsEngineAdapter(engine));
   }
 
