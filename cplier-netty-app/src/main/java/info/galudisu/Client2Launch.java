@@ -66,7 +66,9 @@ public class Client2Launch implements Launch {
     var streamId = 3;
     responseHandler.put(streamId, channel.write(request), channel.newPromise());
 
-    request = buildPostRequest(getSchema(), AsciiString.of("0.0.0.0"), "/json", "{\"framework\": \"disrupt\"}");
+    request =
+        buildPostRequest(
+            getSchema(), AsciiString.of("0.0.0.0"), "/json", "{\"framework\": \"disrupt\"}");
     streamId = 5;
     responseHandler.put(streamId, channel.write(request), channel.newPromise());
 
@@ -163,9 +165,7 @@ public class Client2Launch implements Launch {
   }
 
   /**
-   * Using openssl instead.
-   *
-   * @deprecated Please check {@link Client2Launch#openSslCtx()}
+   * @deprecated use {@link Client2Launch#openSslCtx()} instead.
    * @return {@link SslContext}
    */
   @Deprecated(forRemoval = true)
