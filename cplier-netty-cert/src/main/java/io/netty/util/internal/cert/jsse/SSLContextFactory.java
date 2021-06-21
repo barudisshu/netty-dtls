@@ -1,4 +1,4 @@
-package io.netty.util.internal.resources.openssl;
+package io.netty.util.internal.cert.jsse;
 
 import io.netty.handler.codec.http2.Http2SecurityUtil;
 import io.netty.handler.ssl.*;

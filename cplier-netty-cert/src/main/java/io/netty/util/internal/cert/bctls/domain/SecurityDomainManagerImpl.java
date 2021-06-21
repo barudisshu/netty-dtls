@@ -1,23 +1,10 @@
-/*-
- * #%L
- * io.netty.util.internal.cert
- * %%
- * Copyright (C) 2018 - 2019 Paremus Ltd
- * %%
- * Licensed under the Fair Source License, Version 0.9 (the "License");
- *
- * See the NOTICE.txt file distributed with this work for additional
- * information regarding copyright ownership. You may not use this file
- * except in compliance with the License. For usage restrictions see the
- * LICENSE.txt file distributed with this work
- * #L%
- */
-package io.netty.util.internal.cert.domain;
+package io.netty.util.internal.cert.bctls.domain;
 
-import io.netty.util.internal.cert.api.CertificateInfo;
-import io.netty.util.internal.cert.api.KeyPairInfo;
-import io.netty.util.internal.cert.api.SecurityDomainManager;
-import io.netty.util.internal.cert.domain.AbstractStoreManager.StoreInfo;
+import io.netty.util.internal.cert.bctls.api.CertificateInfo;
+import io.netty.util.internal.cert.bctls.api.KeyPairInfo;
+import io.netty.util.internal.cert.bctls.api.SecurityDomainManager;
+import io.netty.util.internal.cert.bctls.domain.AbstractStoreManager.StoreInfo;
+import io.netty.util.internal.cert.exception.SslException;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
@@ -43,7 +30,7 @@ import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static io.netty.util.internal.cert.api.SecurityDomainConfiguration.*;
+import static io.netty.util.internal.cert.bctls.api.SecurityDomainConfiguration.*;
 import static io.netty.util.internal.license.License.requireFeature;
 import static java.util.Collections.emptyList;
 import static java.util.function.Function.identity;
@@ -220,14 +207,14 @@ public class SecurityDomainManagerImpl
   }
 
   private void triggerUpdate(String pid) {
-    ConfigurationAdmin cfgAdmin = configurationAdmin;
+    var cfgAdmin = configurationAdmin;
     try {
       Configuration[] cfg = cfgAdmin.listConfigurations(String.format(PID_FILTER_TEMPLATE, pid));
       if (cfg != null) {
         cfg[0].update();
       }
     } catch (Exception e) {
-      // TODO Auto-generated catch block
+      throw new SslException(e);
     }
   }
 

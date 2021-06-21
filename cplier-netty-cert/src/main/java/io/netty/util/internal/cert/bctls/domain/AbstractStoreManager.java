@@ -1,20 +1,6 @@
-/*-
- * #%L
- * io.netty.util.internal.cert
- * %%
- * Copyright (C) 2018 - 2019 Paremus Ltd
- * %%
- * Licensed under the Fair Source License, Version 0.9 (the "License");
- *
- * See the NOTICE.txt file distributed with this work for additional
- * information regarding copyright ownership. You may not use this file
- * except in compliance with the License. For usage restrictions see the
- * LICENSE.txt file distributed with this work
- * #L%
- */
-package io.netty.util.internal.cert.domain;
+package io.netty.util.internal.cert.bctls.domain;
 
-import io.netty.util.internal.cert.api.CertificateInfo;
+import io.netty.util.internal.cert.bctls.api.CertificateInfo;
 import org.bouncycastle.asn1.x500.RDN;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x500.style.BCStyle;
@@ -22,7 +8,7 @@ import org.bouncycastle.asn1.x500.style.IETFUtils;
 import org.bouncycastle.cert.jcajce.JcaX509CertificateHolder;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
-import java.io.*;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.KeyStore;
@@ -45,7 +31,7 @@ public abstract class AbstractStoreManager {
   protected final BouncyCastleProvider provider;
   protected final SecureRandom secureRandom;
 
-  public AbstractStoreManager(
+  protected AbstractStoreManager(
       Path storeFolder, BouncyCastleProvider provider, SecureRandom secureRandom) {
     this.storeFolder = storeFolder;
     this.provider = provider;
@@ -54,12 +40,12 @@ public abstract class AbstractStoreManager {
 
   protected abstract String getStoreFileExtension();
 
-  protected static interface StoreAction {
-    public void accept(KeyStore ks, char[] pw) throws Exception;
+  protected interface StoreAction {
+    void accept(KeyStore ks, char[] pw) throws Exception;
   }
 
-  protected static interface StoreFunction<T> {
-    public T apply(KeyStore ks, char[] pw) throws Exception;
+  protected interface StoreFunction<T> {
+    T apply(KeyStore ks, char[] pw) throws Exception;
   }
 
   static class StoreInfo {
@@ -81,11 +67,11 @@ public abstract class AbstractStoreManager {
     Path store = storeFolder.resolve(name + getStoreFileExtension());
     Path secret = storeFolder.resolve(name + SECRET_FILE_EXTENSION);
 
-    char[] pw = new char[16];
-    try (OutputStream os = Files.newOutputStream(store, CREATE_NEW);
-        BufferedWriter bw = Files.newBufferedWriter(secret, CREATE_NEW)) {
+    var pw = new char[16];
+    try (var os = Files.newOutputStream(store, CREATE_NEW);
+        var bw = Files.newBufferedWriter(secret, CREATE_NEW)) {
 
-      StringBuilder hexString = new StringBuilder(Long.toHexString(secureRandom.nextLong()));
+      var hexString = new StringBuilder(Long.toHexString(secureRandom.nextLong()));
 
       while (hexString.length() < 16) {
         hexString.insert(0, '0');
@@ -96,7 +82,7 @@ public abstract class AbstractStoreManager {
       bw.write(pw);
       bw.flush();
 
-      KeyStore ks = KeyStore.getInstance("PKCS12");
+      var ks = KeyStore.getInstance("PKCS12");
       ks.load(null, null);
 
       action.accept(ks, pw);
@@ -104,7 +90,7 @@ public abstract class AbstractStoreManager {
       ks.store(os, pw);
 
     } catch (Exception e) {
-      RuntimeException re = new RuntimeException(e);
+      var re = new RuntimeException(e);
       try {
         Files.deleteIfExists(store);
       } catch (IOException e1) {
@@ -126,16 +112,16 @@ public abstract class AbstractStoreManager {
     Path store = storeFolder.resolve(name + getStoreFileExtension());
     Path secret = storeFolder.resolve(name + SECRET_FILE_EXTENSION);
 
-    char[] pw = new char[16];
-    try (InputStream is = Files.newInputStream(store);
-        BufferedReader br = Files.newBufferedReader(secret)) {
+    var pw = new char[16];
+    try (var is = Files.newInputStream(store);
+        var br = Files.newBufferedReader(secret)) {
 
-      int read = 0;
+      var read = 0;
       do {
         read = br.read(pw, read, pw.length - read);
       } while (read < pw.length);
 
-      KeyStore ks = KeyStore.getInstance("PKCS12");
+      var ks = KeyStore.getInstance("PKCS12");
 
       ks.load(is, pw);
 
@@ -154,7 +140,7 @@ public abstract class AbstractStoreManager {
     loadFromStore(
         name,
         (ks, pw) -> {
-          try (OutputStream os = Files.newOutputStream(store)) {
+          try (var os = Files.newOutputStream(store)) {
             action.accept(ks, pw);
             ks.store(os, pw);
           }
@@ -176,16 +162,15 @@ public abstract class AbstractStoreManager {
 
   protected CertificateInfo toCertificateInfo(String alias, Certificate cert) {
 
-    CertificateInfo ci = new CertificateInfo();
-
-    ci.alias = alias;
-    ci.type = cert.getType();
-    ci.subject =
+    var ci = new CertificateInfo();
+    ci.setAlias(alias);
+    ci.setType(cert.getType());
+    ci.setSubject(
         cert instanceof X509Certificate
             ? getSubject((X509Certificate) cert)
-            : "<unknown certificate type>";
-    ci.algorithm = cert.getPublicKey().getAlgorithm();
-    ci.publicKey = cert.getPublicKey().getEncoded();
+            : "<unknown certificate type>");
+    ci.setAlgorithm(cert.getPublicKey().getAlgorithm());
+    ci.setPublicKey(cert.getPublicKey().getEncoded());
 
     return ci;
   }

@@ -1,20 +1,6 @@
-/*-
- * #%L
- * io.netty.util.internal.cert
- * %%
- * Copyright (C) 2018 - 2019 Paremus Ltd
- * %%
- * Licensed under the Fair Source License, Version 0.9 (the "License");
- *
- * See the NOTICE.txt file distributed with this work for additional
- * information regarding copyright ownership. You may not use this file
- * except in compliance with the License. For usage restrictions see the
- * LICENSE.txt file distributed with this work
- * #L%
- */
-package io.netty.util.internal.cert.domain;
+package io.netty.util.internal.cert.bctls.domain;
 
-import io.netty.util.internal.cert.domain.KeyStoreManager.SignerInfo;
+import io.netty.util.internal.cert.bctls.domain.KeyStoreManager.SignerInfo;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x509.BasicConstraints;
 import org.bouncycastle.asn1.x509.Extension;
@@ -49,11 +35,11 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Date;
 
-import static io.netty.util.internal.cert.domain.CertificateGenerator.SignatureAlgorithm.SHA384WITHECDSA;
+import static io.netty.util.internal.cert.bctls.domain.CertificateGenerator.SignatureAlgorithm.SHA384WITHECDSA;
 
 public class CertificateGenerator {
 
-  public static enum SignatureAlgorithm {
+  public enum SignatureAlgorithm {
     SHA384WITHECDSA("SHA384WITHECDSA"),
     SHA384WITHRSA("SHA384WITHRSA");
 
@@ -96,7 +82,7 @@ public class CertificateGenerator {
   public Certificate generateRootCertificate(
       KeyPair keyPair, String subject, Duration validity, SignatureAlgorithm sigAlg) {
 
-    X500Name x500subject = X500Name.getInstance(new X500Principal("CN=" + subject).getEncoded());
+    var x500subject = X500Name.getInstance(new X500Principal("CN=" + subject).getEncoded());
     BigInteger serial = newSerial();
 
     return signCertificate(
@@ -125,22 +111,19 @@ public class CertificateGenerator {
         new JcaPKCS10CertificationRequestBuilder(
             new X500Principal("CN=" + subject), keyPair.getPublic());
 
-    JcaContentSignerBuilder csBuilder = new JcaContentSignerBuilder(sigAlg.getAlgorithmName());
+    var csBuilder = new JcaContentSignerBuilder(sigAlg.getAlgorithmName());
     csBuilder.setProvider(provider);
 
-    try (StringWriter writer = new StringWriter();
-        JcaPEMWriter pemWriter = new JcaPEMWriter(writer)) {
+    try (var writer = new StringWriter();
+        var pemWriter = new JcaPEMWriter(writer)) {
 
       ContentSigner signer = csBuilder.build(keyPair.getPrivate());
       PKCS10CertificationRequest csr = p10Builder.build(signer);
 
       pemWriter.writeObject(csr);
       pemWriter.flush();
-      pemWriter.close();
       return writer.toString();
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    } catch (OperatorCreationException e) {
+    } catch (IOException | OperatorCreationException e) {
       throw new RuntimeException(e);
     }
   }
@@ -148,11 +131,11 @@ public class CertificateGenerator {
   public String signCertificate(SignerInfo signerInfo, String signingRequest) {
     try {
       PKCS10CertificationRequest req;
-      try (PEMParser parser = new PEMParser(new StringReader(signingRequest))) {
+      try (var parser = new PEMParser(new StringReader(signingRequest))) {
         req = (PKCS10CertificationRequest) parser.readObject();
       }
 
-      SubjectPublicKeyInfo reqPublicKey = req.getSubjectPublicKeyInfo();
+      var reqPublicKey = req.getSubjectPublicKeyInfo();
       if (!req.isSignatureValid(
           new JcaContentVerifierProviderBuilder().setProvider(provider).build(reqPublicKey))) {
         throw new IllegalArgumentException(
@@ -160,10 +143,10 @@ public class CertificateGenerator {
       }
 
       X509Certificate caCert = (X509Certificate) signerInfo.trustChain[0];
-      X500Name issuer = X500Name.getInstance(caCert.getSubjectX500Principal().getEncoded());
+      var issuer = X500Name.getInstance(caCert.getSubjectX500Principal().getEncoded());
       BigInteger issuerSerial = caCert.getSerialNumber();
 
-      Certificate cert =
+      var cert =
           signCertificate(
               reqPublicKey,
               req.getSubject(),
@@ -175,8 +158,8 @@ public class CertificateGenerator {
               guessSigAlg(signerInfo.privateKey),
               false);
 
-      try (StringWriter writer = new StringWriter();
-          JcaPEMWriter pemWriter = new JcaPEMWriter(writer)) {
+      try (var writer = new StringWriter();
+          var pemWriter = new JcaPEMWriter(writer)) {
 
         pemWriter.writeObject(cert);
 
@@ -184,7 +167,6 @@ public class CertificateGenerator {
           pemWriter.writeObject(c);
         }
         pemWriter.flush();
-        pemWriter.close();
         return writer.toString();
       }
     } catch (Exception e) {
@@ -204,9 +186,9 @@ public class CertificateGenerator {
       boolean isCA) {
 
     try {
-      Instant now = Instant.now();
+      var now = Instant.now();
 
-      X509v3CertificateBuilder certBuilder =
+      var certBuilder =
           new X509v3CertificateBuilder(
               issuer,
               serial,
@@ -217,7 +199,7 @@ public class CertificateGenerator {
 
       certBuilder.addExtension(Extension.basicConstraints, false, new BasicConstraints(isCA));
 
-      JcaContentSignerBuilder csBuilder = new JcaContentSignerBuilder(sigAlg.getAlgorithmName());
+      var csBuilder = new JcaContentSignerBuilder(sigAlg.getAlgorithmName());
       ContentSigner signer = csBuilder.setProvider(provider).build(privateKey);
       X509CertificateHolder certHolder = certBuilder.build(signer);
 

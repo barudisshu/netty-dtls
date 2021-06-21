@@ -1,4 +1,6 @@
-package io.netty.util.internal.resources.openssl;
+package io.netty.util.internal.cert.jsse;
+
+import io.netty.util.internal.cert.exception.SslException;
 
 import javax.crypto.Cipher;
 import javax.crypto.EncryptedPrivateKeyInfo;
@@ -55,13 +57,13 @@ final class PemUtils {
         line = bReader.readLine();
       }
       if (null == line) {
-        throw new SslConfigException("Error parsing private key, stream is empty");
+        throw new SslException("Error parsing private key, stream is empty");
       }
       switch (line.trim()) {
         case PKCS8_ENCRYPTED_HEADER:
           char[] password = passwordSupplier.get();
           if (password == null) {
-            throw new SslConfigException("cannot read encrypted key without a password");
+            throw new SslException("cannot read encrypted key without a password");
           }
           return parsePKCS8Encrypted(bReader, password);
         case PKCS8_HEADER:
@@ -77,14 +79,14 @@ final class PemUtils {
         case OPENSSL_EC_PARAMS_HEADER:
           return parseOpenSslEC(removeECHeaders(bReader), passwordSupplier);
         default:
-          throw new SslConfigException(
+          throw new SslException(
               "error parsing Private Key does not contain a supported key format");
       }
 
     } catch (FileNotFoundException | NoSuchFileException e) {
-      throw new SslConfigException("private key stream does not exist", e);
+      throw new SslException("private key stream does not exist", e);
     } catch (IOException | GeneralSecurityException e) {
-      throw new SslConfigException("private key stream cannot be parsed", e);
+      throw new SslException("private key stream cannot be parsed", e);
     }
   }
 
@@ -104,14 +106,14 @@ final class PemUtils {
         line = bReader.readLine();
       }
       if (null == line) {
-        throw new SslConfigException(
+        throw new SslException(
             "Error parsing Private Key [" + keyPath.toAbsolutePath() + "], file is empty");
       }
       switch (line.trim()) {
         case PKCS8_ENCRYPTED_HEADER:
           char[] password = passwordSupplier.get();
           if (password == null) {
-            throw new SslConfigException(
+            throw new SslException(
                 "cannot read encrypted key ["
                     + keyPath.toAbsolutePath()
                     + "] "
@@ -131,17 +133,17 @@ final class PemUtils {
         case OPENSSL_EC_PARAMS_HEADER:
           return parseOpenSslEC(removeECHeaders(bReader), passwordSupplier);
         default:
-          throw new SslConfigException(
+          throw new SslException(
               "error parsing Private Key ["
                   + keyPath.toAbsolutePath()
                   + "], file "
                   + "does not contain a supported key format");
       }
     } catch (FileNotFoundException | NoSuchFileException e) {
-      throw new SslConfigException(
+      throw new SslException(
           "private key file [" + keyPath.toAbsolutePath() + "] does not exist", e);
     } catch (IOException | GeneralSecurityException e) {
-      throw new SslConfigException(
+      throw new SslException(
           "private key file [" + keyPath.toAbsolutePath() + "] cannot be parsed", e);
     }
   }
@@ -504,7 +506,7 @@ final class PemUtils {
       Arrays.fill(passwordBytes, (byte) 0);
       return key;
     } catch (NoSuchAlgorithmException e) {
-      throw new SslConfigException(
+      throw new SslException(
           "unexpected exception creating MessageDigest instance for [md5]", e);
     }
   }
@@ -671,7 +673,7 @@ final class PemUtils {
       try (InputStream input = Files.newInputStream(path)) {
         final X509Certificate parsed = (X509Certificate) certFactory.generateCertificate(input);
         if (null == parsed) {
-          throw new SslConfigException(
+          throw new SslException(
               "failed to parse any certificates from [" + path.toAbsolutePath() + "]");
         }
         certificates.add(parsed);
@@ -687,7 +689,7 @@ final class PemUtils {
     for (InputStream input : certPaths) {
       final X509Certificate parsed = (X509Certificate) certFactory.generateCertificate(input);
       if (null == parsed) {
-        throw new SslConfigException("failed to parse any certificates from stream");
+        throw new SslException("failed to parse any certificates from stream");
       }
       certificates.add(parsed);
     }

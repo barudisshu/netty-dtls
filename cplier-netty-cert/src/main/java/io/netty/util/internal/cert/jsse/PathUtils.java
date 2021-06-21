@@ -1,4 +1,4 @@
-package io.netty.util.internal.resources.openssl;
+package io.netty.util.internal.cert.jsse;
 
 import java.net.URI;
 import java.nio.file.FileSystem;

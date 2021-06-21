@@ -1,4 +1,6 @@
-package io.netty.util.internal.resources.openssl;
+package io.netty.util.internal.cert.jsse;
+
+import io.netty.util.internal.cert.exception.SslException;
 
 import javax.net.ssl.*;
 import java.io.IOException;
@@ -35,7 +37,7 @@ final class KeyStoreUtil {
   static KeyStore readKeyStore(Path path, String type, char[] password)
       throws GeneralSecurityException {
     if (Files.notExists(path)) {
-      throw new SslConfigException(
+      throw new SslException(
           "cannot read a ["
               + type
               + "] keystore from ["
@@ -49,7 +51,7 @@ final class KeyStoreUtil {
       }
       return keyStore;
     } catch (IOException e) {
-      throw new SslConfigException(
+      throw new SslException(
           "cannot read a ["
               + type
               + "] keystore from ["
@@ -98,7 +100,7 @@ final class KeyStoreUtil {
     try {
       keyStore.load(null, null);
     } catch (IOException e) {
-      throw new SslConfigException("Unexpected error initializing a new in-memory keystore", e);
+      throw new SslException("Unexpected error initializing a new in-memory keystore", e);
     }
     return keyStore;
   }
@@ -117,7 +119,7 @@ final class KeyStoreUtil {
         return (X509ExtendedKeyManager) keyManager;
       }
     }
-    throw new SslConfigException(
+    throw new SslException(
         "failed to find a X509ExtendedKeyManager in the key manager factory for ["
             + algorithm
             + "] and keystore ["
@@ -139,7 +141,7 @@ final class KeyStoreUtil {
         return (X509ExtendedTrustManager) trustManager;
       }
     }
-    throw new SslConfigException(
+    throw new SslException(
         "failed to find a X509ExtendedTrustManager in the trust manager factory for ["
             + algorithm
             + "] and truststore ["

@@ -1,20 +1,6 @@
-/*-
- * #%L
- * io.netty.util.internal.cert
- * %%
- * Copyright (C) 2018 - 2019 Paremus Ltd
- * %%
- * Licensed under the Fair Source License, Version 0.9 (the "License");
- *
- * See the NOTICE.txt file distributed with this work for additional
- * information regarding copyright ownership. You may not use this file
- * except in compliance with the License. For usage restrictions see the
- * LICENSE.txt file distributed with this work
- * #L%
- */
-package io.netty.util.internal.cert.domain;
+package io.netty.util.internal.cert.bctls.domain;
 
-import io.netty.util.internal.cert.api.CertificateInfo;
+import io.netty.util.internal.cert.bctls.api.CertificateInfo;
 import org.bouncycastle.cert.X509CertificateHolder;
 import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
@@ -50,7 +36,7 @@ public class TrustStoreManager extends AbstractStoreManager {
   }
 
   public KeyStore createInMemoryTrustStore(String encodedCertificates) throws KeyStoreException {
-    KeyStore ks = KeyStore.getInstance("PKCS12");
+    var ks = KeyStore.getInstance("PKCS12");
     try {
       ks.load(null, null);
     } catch (Exception e) {
@@ -109,7 +95,7 @@ public class TrustStoreManager extends AbstractStoreManager {
 
   public Map<String, Collection<CertificateInfo>> listTrustStores() {
     return listStores(
-        s -> s.collect(Collectors.toMap(Function.identity(), n -> getCertificateInfo(n))));
+        s -> s.collect(Collectors.toMap(Function.identity(), this::getCertificateInfo)));
   }
 
   public Collection<CertificateInfo> getCertificateInfo(String name) {
@@ -124,11 +110,9 @@ public class TrustStoreManager extends AbstractStoreManager {
 
   private List<Certificate> readCertificates(String encodedCertificates) {
     List<Certificate> certs = new ArrayList<>();
-    try (PEMParser parser = new PEMParser(new StringReader(encodedCertificates))) {
-
-      JcaX509CertificateConverter converter = new JcaX509CertificateConverter();
+    try (var parser = new PEMParser(new StringReader(encodedCertificates))) {
+      var converter = new JcaX509CertificateConverter();
       converter.setProvider(provider);
-
       X509CertificateHolder cert;
       while ((cert = (X509CertificateHolder) parser.readObject()) != null) {
         certs.add(converter.getCertificate(cert));

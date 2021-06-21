@@ -1,21 +1,7 @@
-/*-
- * #%L
- * io.netty.util.internal.cert
- * %%
- * Copyright (C) 2018 - 2019 Paremus Ltd
- * %%
- * Licensed under the Fair Source License, Version 0.9 (the "License");
- *
- * See the NOTICE.txt file distributed with this work for additional
- * information regarding copyright ownership. You may not use this file
- * except in compliance with the License. For usage restrictions see the
- * LICENSE.txt file distributed with this work
- * #L%
- */
-package io.netty.util.internal.cert.domain;
+package io.netty.util.internal.cert.bctls.domain;
 
-import io.netty.util.internal.cert.api.CertificateInfo;
-import io.netty.util.internal.cert.domain.KeyPairManager.Algorithm;
+import io.netty.util.internal.cert.bctls.api.CertificateInfo;
+import io.netty.util.internal.cert.bctls.domain.KeyPairManager.Algorithm;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.openssl.jcajce.JcaPEMWriter;
 import org.junit.jupiter.api.BeforeEach;
@@ -80,17 +66,17 @@ class TrustStoreManagerTest {
 
     List<CertificateInfo> list = new ArrayList<>(info);
 
-    list.sort(Comparator.comparing(a -> a.alias));
+    list.sort(Comparator.comparing(a -> a.getAlias()));
 
-    assertEquals("TEST_CERT".toLowerCase(), list.get(0).alias);
-    assertEquals("TEST_CERT", list.get(0).subject);
-    assertEquals(keyPair.getPublic().getAlgorithm(), list.get(0).algorithm);
-    assertArrayEquals(keyPair.getPublic().getEncoded(), list.get(0).publicKey);
+    assertEquals("TEST_CERT".toLowerCase(), list.get(0).getAlias());
+    assertEquals("TEST_CERT", list.get(0).getSubject());
+    assertEquals(keyPair.getPublic().getAlgorithm(), list.get(0).getAlgorithm());
+    assertArrayEquals(keyPair.getPublic().getEncoded(), list.get(0).getPublicKey());
 
-    assertEquals("TEST_CERT2".toLowerCase(), list.get(1).alias);
-    assertEquals("TEST_CERT2", list.get(1).subject);
-    assertEquals(keyPair2.getPublic().getAlgorithm(), list.get(1).algorithm);
-    assertArrayEquals(keyPair2.getPublic().getEncoded(), list.get(1).publicKey);
+    assertEquals("TEST_CERT2".toLowerCase(), list.get(1).getAlias());
+    assertEquals("TEST_CERT2", list.get(1).getSubject());
+    assertEquals(keyPair2.getPublic().getAlgorithm(), list.get(1).getAlgorithm());
+    assertArrayEquals(keyPair2.getPublic().getEncoded(), list.get(1).getPublicKey());
   }
 
   @Test
@@ -120,10 +106,10 @@ class TrustStoreManagerTest {
 
     List<CertificateInfo> list = new ArrayList<>(info);
 
-    assertEquals("TEST_CERT".toLowerCase(), list.get(0).alias);
-    assertEquals("TEST_CERT", list.get(0).subject);
-    assertEquals(keyPair.getPublic().getAlgorithm(), list.get(0).algorithm);
-    assertArrayEquals(keyPair.getPublic().getEncoded(), list.get(0).publicKey);
+    assertEquals("TEST_CERT".toLowerCase(), list.get(0).getAlias());
+    assertEquals("TEST_CERT", list.get(0).getSubject());
+    assertEquals(keyPair.getPublic().getAlgorithm(), list.get(0).getAlgorithm());
+    assertArrayEquals(keyPair.getPublic().getEncoded(), list.get(0).getPublicKey());
 
     // Add a new cert
 
@@ -145,17 +131,17 @@ class TrustStoreManagerTest {
 
     list = new ArrayList<>(info);
 
-    list.sort(Comparator.comparing(a -> a.alias));
+    list.sort(Comparator.comparing(CertificateInfo::getAlias));
 
-    assertEquals("TEST_CERT".toLowerCase(), list.get(0).alias);
-    assertEquals("TEST_CERT", list.get(0).subject);
-    assertEquals(keyPair.getPublic().getAlgorithm(), list.get(0).algorithm);
-    assertArrayEquals(keyPair.getPublic().getEncoded(), list.get(0).publicKey);
+    assertEquals("TEST_CERT".toLowerCase(), list.get(0).getAlias());
+    assertEquals("TEST_CERT", list.get(0).getSubject());
+    assertEquals(keyPair.getPublic().getAlgorithm(), list.get(0).getAlgorithm());
+    assertArrayEquals(keyPair.getPublic().getEncoded(), list.get(0).getPublicKey());
 
-    assertEquals("TEST_CERT2".toLowerCase(), list.get(1).alias);
-    assertEquals("TEST_CERT2", list.get(1).subject);
-    assertEquals(keyPair2.getPublic().getAlgorithm(), list.get(1).algorithm);
-    assertArrayEquals(keyPair2.getPublic().getEncoded(), list.get(1).publicKey);
+    assertEquals("TEST_CERT2".toLowerCase(), list.get(1).getAlias());
+    assertEquals("TEST_CERT2", list.get(1).getSubject());
+    assertEquals(keyPair2.getPublic().getAlgorithm(), list.get(1).getAlgorithm());
+    assertArrayEquals(keyPair2.getPublic().getEncoded(), list.get(1).getPublicKey());
 
     // Remove the original cert
 
@@ -170,9 +156,9 @@ class TrustStoreManagerTest {
 
     list = new ArrayList<>(info);
 
-    assertEquals("TEST_CERT2".toLowerCase(), list.get(0).alias);
-    assertEquals("TEST_CERT2", list.get(0).subject);
-    assertEquals(keyPair2.getPublic().getAlgorithm(), list.get(0).algorithm);
-    assertArrayEquals(keyPair2.getPublic().getEncoded(), list.get(0).publicKey);
+    assertEquals("TEST_CERT2".toLowerCase(), list.get(0).getAlias());
+    assertEquals("TEST_CERT2", list.get(0).getSubject());
+    assertEquals(keyPair2.getPublic().getAlgorithm(), list.get(0).getAlgorithm());
+    assertArrayEquals(keyPair2.getPublic().getEncoded(), list.get(0).getPublicKey());
   }
 }

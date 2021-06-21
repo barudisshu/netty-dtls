@@ -1,21 +1,7 @@
-/*-
- * #%L
- * io.netty.util.internal.cert
- * %%
- * Copyright (C) 2018 - 2019 Paremus Ltd
- * %%
- * Licensed under the Fair Source License, Version 0.9 (the "License");
- *
- * See the NOTICE.txt file distributed with this work for additional
- * information regarding copyright ownership. You may not use this file
- * except in compliance with the License. For usage restrictions see the
- * LICENSE.txt file distributed with this work
- * #L%
- */
-package io.netty.util.internal.cert.domain;
+package io.netty.util.internal.cert.bctls.domain;
 
-import io.netty.util.internal.cert.api.CertificateInfo;
-import io.netty.util.internal.cert.domain.AbstractStoreManager.StoreInfo;
+import io.netty.util.internal.cert.bctls.api.CertificateInfo;
+import io.netty.util.internal.cert.bctls.domain.AbstractStoreManager.StoreInfo;
 import org.apache.cxf.jaxrs.servlet.CXFNonSpringJaxrsServlet;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.eclipse.jetty.server.*;
@@ -143,6 +129,6 @@ class CertificateSigningRequestSubmitterTest {
 
     CertificateInfo certificateInfo = keyStoreManager.getCertificateInfo("signed");
 
-    assertEquals("client_cert", certificateInfo.subject);
+    assertEquals("client_cert", certificateInfo.getSubject());
   }
 }

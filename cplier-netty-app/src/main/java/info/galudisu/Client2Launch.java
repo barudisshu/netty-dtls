@@ -13,7 +13,7 @@ import io.netty.handler.codec.http2.HttpConversionUtil;
 import io.netty.handler.ssl.SslContext;
 import io.netty.util.AsciiString;
 import io.netty.util.CharsetUtil;
-import io.netty.util.internal.resources.openssl.SSLContextFactory;
+import io.netty.util.internal.cert.jsse.SSLContextFactory;
 import io.netty.util.internal.resources.platform.DefaultLoopNativeDetector;
 import lombok.extern.slf4j.Slf4j;
 
