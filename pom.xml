@@ -8,7 +8,6 @@
     <modules>
         <module>cplier-netty-enhance</module>
         <module>cplier-netty-cert</module>
-        <module>cplier-netty-license</module>
         <module>cplier-netty-tls</module>
         <module>cplier-netty-app</module>
     </modules>

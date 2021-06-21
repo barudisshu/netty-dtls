@@ -19,7 +19,6 @@ import java.nio.file.Files;
 import java.security.*;
 import java.security.cert.CertificateException;
 
-import static io.netty.util.internal.license.License.requireFeature;
 import static org.osgi.service.component.annotations.ConfigurationPolicy.REQUIRE;
 
 @Component(configurationPid = "io.netty.util.internal.tls", configurationPolicy = REQUIRE)
@@ -41,8 +40,6 @@ public class ParemusNettyTLSImpl implements ParemusNettyTLS {
 
   @Activate
   public ParemusNettyTLSImpl(Config config) throws Exception {
-
-    requireFeature("core", null);
 
     insecure = config.insecure();
 

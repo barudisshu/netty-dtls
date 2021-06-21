@@ -31,7 +31,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static io.netty.util.internal.cert.bctls.api.SecurityDomainConfiguration.*;
-import static io.netty.util.internal.license.License.requireFeature;
 import static java.util.Collections.emptyList;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
@@ -74,8 +73,6 @@ public class SecurityDomainManagerImpl
 
   @Activate
   void start(BundleContext ctx, Config config) throws ConfigurationException {
-
-    requireFeature("core", null);
 
     String configPath = config.storage_folder();
 
