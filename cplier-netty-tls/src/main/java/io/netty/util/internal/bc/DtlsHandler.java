@@ -49,9 +49,10 @@ public abstract class DtlsHandler extends ChannelDuplexHandler {
             log.debug("handshake finish");
             engine.initialize(encTransport);
             log.debug(getName() + " init end ");
-          } catch (IOException | InterruptedException | ExecutionException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+          } catch (IOException | ExecutionException e) {
+            log.error("handshake fail", e);
+          } catch (InterruptedException ie) {
+            Thread.currentThread().interrupt();
           }
         });
   }

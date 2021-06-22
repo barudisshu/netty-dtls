@@ -16,11 +16,6 @@ public class DtlsServerHandler extends DtlsHandler {
     this.mserver = dtlsServer;
   }
 
-  /*
-   * (non-Javadoc)
-   *
-   * @see org.opendaylight.usc.crypto.DtlsHandler#getDtlsTransport()
-   */
   @Override
   protected DTLSTransport getDtlsTransport() throws IOException {
     var serverProtocol = new DTLSServerProtocol();

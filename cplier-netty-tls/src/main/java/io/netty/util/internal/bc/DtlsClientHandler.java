@@ -18,11 +18,6 @@ public class DtlsClientHandler extends DtlsHandler {
     this.mclient = dtlsClient;
   }
 
-  /*
-   * (non-Javadoc)
-   *
-   * @see org.opendaylight.usc.crypto.DtlsHandler#getDtlsTransport()
-   */
   @Override
   protected DTLSTransport getDtlsTransport() throws IOException {
     DTLSClientProtocol clientProtocol = new DTLSClientProtocol();

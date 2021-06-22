@@ -23,14 +23,17 @@ public class DtlsClient extends DefaultTlsClient {
   public TlsAuthentication getAuthentication() throws IOException {
     return new TlsAuthentication() {
       @Override
-      public void notifyServerCertificate(TlsServerCertificate tlsServerCertificate) throws IOException {
+      public void notifyServerCertificate(TlsServerCertificate tlsServerCertificate)
+          throws IOException {
         Certificate chain = tlsServerCertificate.getCertificate();
       }
 
       @Override
-      public TlsCredentials getClientCredentials(CertificateRequest certificateRequest) throws IOException {
+      public TlsCredentials getClientCredentials(CertificateRequest certificateRequest)
+          throws IOException {
         short[] certificateTypes = certificateRequest.getCertificateTypes();
-        if (certificateTypes == null || !Arrays.contains(certificateTypes, ClientCertificateType.rsa_sign)) {
+        if (certificateTypes == null
+            || !Arrays.contains(certificateTypes, ClientCertificateType.rsa_sign)) {
           return null;
         }
 
@@ -53,7 +56,8 @@ public class DtlsClient extends DefaultTlsClient {
           @SneakyThrows
           @Override
           public Certificate getCertificate() {
-            return (Certificate) tlsCrypto.createCertificate(certificateRequest.getCertificateRequestContext());
+            return (Certificate)
+                tlsCrypto.createCertificate(certificateRequest.getCertificateRequestContext());
           }
         };
       }

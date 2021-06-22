@@ -4,9 +4,9 @@ import io.netty.channel.socket.DatagramPacket;
 
 public class DtlsPacket {
 
-    public final DatagramPacket packet;
+  public final DatagramPacket packet;
 
-    DtlsPacket(DatagramPacket packet) {
-        this.packet = packet;
-    }
+  DtlsPacket(DatagramPacket packet) {
+    this.packet = packet;
+  }
 }
