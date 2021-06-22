@@ -13,23 +13,14 @@ openssl genrsa 2048 > ca.key
 2. Generate the X509 certificate for the CA:
 
 ```shell
-openssl req -new -x509 -nodes -days 365000 \
-  -key ca.key \
-  -out ca.crt \
-  -subj "/C=cn/ST=Guangdong/L=Guangzhou/O=Cplier, Inc./OU=cplier/CN=cplier.com/emailAddress=galudisu@cplier.com"
+openssl req -new -x509 -nodes -days 365000 -key ca.key -out ca.crt -subj "/C=cn/ST=Guangdong/L=Guangzhou/O=Cplier, Inc./OU=cplier/CN=cplier.com/emailAddress=galudisu@cplier.com"
 ```
 
 3. Generate the private key and certificate request for the server and client:
 
 ```shell
-openssl req -newkey rsa:2048 -nodes -days 365000 \
-  -keyout server.key \
-  -out server.csr \
-  -subj "/C=cn/ST=Guangdong/L=Guangzhou/O=Cplier, Server Inc./OU=cplier/CN=cplier.com/emailAddress=galudisu@cplier.com"
-openssl req -newkey rsa:2048 -nodes -days 365000 \
-  -keyout client.key \
-  -out client.csr \
-  -subj "/C=cn/ST=Guangdong/L=Guangzhou/O=Cplier, Client Inc./OU=cplier/CN=cplier.com/emailAddress=galudisu@cplier.com"
+openssl req -newkey rsa:2048 -nodes -days 365000 -keyout server.key -out server.csr -subj "/C=cn/ST=Guangdong/L=Guangzhou/O=Cplier, Inc./OU=cplier/CN=server.cplier.com/emailAddress=galudisu@cplier.com"
+openssl req -newkey rsa:2048 -nodes -days 365000 -keyout client.key -out client.csr -subj "/C=cn/ST=Guangdong/L=Guangzhou/O=Cplier, Inc./OU=cplier/CN=client.cplier.com/emailAddress=galudisu@cplier.com"
 ```
 
 NOTE: subject must be difference with CA.
@@ -51,8 +42,8 @@ openssl verify -CAfile ca.crt ca.crt client.crt
 6. Encode into netty recognize PKCS#8 pass challenge key.
 
 ```shell
-openssl pkcs8 -v1 "PBE-SHA1-3DES" -topk8 -in server.key -out pkcs8_server.key
-openssl pkcs8 -v1 "PBE-SHA1-3DES" -topk8 -in client.key -out pkcs8_client.key
+openssl pkcs8 -topk8 -in server.key -out pkcs8_server.key
+openssl pkcs8 -topk8 -in client.key -out pkcs8_client.key
 ```
 
 7. Generate truststore:
@@ -64,14 +55,14 @@ keytool -import -noprompt -file ca.crt -keystore truststore.jks -storepass cplie
 8. Generate keystore for server:
 
 ```shell
-openssl pkcs12 -export -in server.crt -inkey server.key -out server.pkcs12 -passout pass:server
+openssl pkcs12 -export -in server.crt -inkey server.key -out server.pkcs12 -passout pass:server -name server -noiter -nomaciter
 keytool -importkeystore -srckeystore server.pkcs12 -srcstoretype PKCS12 -deststoretype pkcs12 -destkeystore server.jks -srcstorepass server -deststorepass server
 ```
 
 8. Generate keystore for client:
 
 ```shell
-openssl pkcs12 -export -in client.crt -inkey client.key -out client.pkcs12 -passout pass:client
+openssl pkcs12 -export -in client.crt -inkey client.key -out client.pkcs12 -passout pass:client -name client -noiter -nomaciter
 keytool -importkeystore -srckeystore client.pkcs12 -srcstoretype PKCS12 -deststoretype pkcs12 -destkeystore client.jks -srcstorepass client -deststorepass client
 ```
 

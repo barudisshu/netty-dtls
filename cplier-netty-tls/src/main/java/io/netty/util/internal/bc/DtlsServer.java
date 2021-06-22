@@ -11,7 +11,6 @@ import org.bouncycastle.tls.crypto.impl.bc.BcTlsCrypto;
 import javax.net.ssl.SSLContext;
 import java.io.IOException;
 import java.security.SecureRandom;
-import java.util.Vector;
 
 @Slf4j
 public class DtlsServer extends DefaultTlsServer {
@@ -23,50 +22,52 @@ public class DtlsServer extends DefaultTlsServer {
     super(new BcTlsCrypto(new SecureRandom()));
     this.sslContext = sslContext;
     try {
-      privateKey = TlsUtils.loadBcPrivateKeyResource("openssl/server.key");
+      privateKey = NettyTlsUtils.loadBcPrivateKeyResource("openssl/server.key");
     } catch (IOException e) {
       e.printStackTrace();
     }
   }
 
   @Override
-  public CertificateRequest getCertificateRequest() throws IOException {
-    log.debug("==>");
-    short[] certificateTypes =
-        new short[] {
-          ClientCertificateType.rsa_sign,
-          ClientCertificateType.dss_sign,
-          ClientCertificateType.ecdsa_sign
-        };
-
-    Vector serverSigAlgs = null;
-    if (TlsUtils.isSignatureAlgorithmsExtensionAllowed(context.getServerVersion())) {
-      serverSigAlgs = TlsUtils.getDefaultSupportedSignatureAlgorithms(context);
-    }
-
-    Vector certificateAuthorities = new Vector();
-    return new CertificateRequest(certificateTypes, serverSigAlgs, certificateAuthorities);
+  protected int[] getSupportedCipherSuites() {
+    return new int[] {
+      CipherSuite.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
+      CipherSuite.TLS_DHE_RSA_WITH_AES_256_GCM_SHA384,
+      CipherSuite.TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256,
+      CipherSuite.TLS_DHE_RSA_WITH_CHACHA20_POLY1305_SHA256,
+      CipherSuite.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
+      CipherSuite.TLS_DHE_RSA_WITH_AES_128_GCM_SHA256,
+      CipherSuite.TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384,
+      CipherSuite.TLS_DHE_RSA_WITH_AES_256_CBC_SHA256,
+      CipherSuite.TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256,
+      CipherSuite.TLS_DHE_RSA_WITH_AES_128_CBC_SHA256,
+      CipherSuite.TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,
+      CipherSuite.TLS_DHE_RSA_WITH_AES_256_CBC_SHA,
+      CipherSuite.TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA,
+      CipherSuite.TLS_DHE_RSA_WITH_AES_128_CBC_SHA,
+      CipherSuite.TLS_AES_256_GCM_SHA384,
+      CipherSuite.TLS_AES_128_GCM_SHA256,
+    };
   }
 
   @Override
   protected TlsCredentialedDecryptor getRSAEncryptionCredentials() throws IOException {
-    Certificate certs =
-        TlsUtils.loadCertificateChain(
-            context, new String[] {"openssl/ca.crt", "openssl/server.crt"});
+    var certificate = NettyTlsUtils.loadCertificateChain(context, new String[] {"openssl/server.crt"});
     return new BcDefaultTlsCredentialedDecryptor(
-        (BcTlsCrypto) context.getCrypto(), certs, privateKey);
+        (BcTlsCrypto) context.getCrypto(), certificate, privateKey);
   }
 
   @Override
   protected TlsCredentialedSigner getRSASignerCredentials() throws IOException {
-    Certificate certs =
-        TlsUtils.loadCertificateChain(
-            context, new String[] {"openssl/ca.crt", "openssl/server.crt"});
+    var crypto = context.getCrypto();
+    var cryptoParams = new TlsCryptoParameters(context);
+    var certificate = NettyTlsUtils.loadCertificateChain(context, new String[] {"openssl/server.crt", "openssl/ca.crt"});
+
     return new BcDefaultTlsCredentialedSigner(
-        new TlsCryptoParameters(context),
-        (BcTlsCrypto) context.getCrypto(),
+        cryptoParams,
+        (BcTlsCrypto) crypto,
         privateKey,
-        certs,
+        certificate,
         SignatureAndHashAlgorithm.rsa_pss_rsae_sha256);
   }
 
