@@ -51,9 +51,9 @@ public class UdpLaunch implements Launch {
         channelFutures.add(channelFuture);
       }
 
-      log.info("http2 server start...");
+      log.info("DTLS/UDP server start...");
     } catch (InterruptedException e) {
-      log.error("http2 server error", e);
+      log.error("DTLS/UDP server error", e);
       Thread.currentThread().interrupt();
     }
   }

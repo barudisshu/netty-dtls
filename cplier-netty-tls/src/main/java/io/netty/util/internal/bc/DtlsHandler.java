@@ -46,6 +46,7 @@ public abstract class DtlsHandler extends ChannelDuplexHandler {
             log.debug(getName() + " init start ");
 
             final DTLSTransport encTransport = getDtlsTransport();
+            log.debug("handshake finish");
             engine.initialize(encTransport);
             log.debug(getName() + " init end ");
           } catch (IOException | InterruptedException | ExecutionException e) {
@@ -59,15 +60,13 @@ public abstract class DtlsHandler extends ChannelDuplexHandler {
   public void channelRead(ChannelHandlerContext ctx, Object obj) throws Exception {
     if (obj instanceof DatagramPacket) {
       DatagramPacket msg = (DatagramPacket) obj;
-
-      log.debug(getName() + " channelRead ");
+      log.trace(getName() + " channelRead ");
 
       // send packet to underlying transport for consumption
       ArrayList<DatagramPacket> packets = engine.read(msg);
       for (DatagramPacket packet : packets) {
         super.channelRead(ctx, packet);
       }
-
     } else {
       super.channelRead(ctx, obj);
     }
@@ -80,7 +79,7 @@ public abstract class DtlsHandler extends ChannelDuplexHandler {
       // this is the unencryped data written by the app
       DatagramPacket msg = (DatagramPacket) obj;
 
-      log.debug(getName() + " write " + msg);
+      log.trace(getName() + " write " + msg);
 
       // flush the queue when channel initialized
       if (engine.isInitialized()) {

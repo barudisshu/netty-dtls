@@ -32,10 +32,12 @@ public class UdpChannelInitializer extends ChannelInitializer<DatagramChannel> {
 
     try {
       if (isJdkSsl) {
+        // jdk
         var sslContext = createSSLContext(sslStream);
         var engine = createSSLEngine(sslContext);
         pipeline.addLast(new ServerDTLSHandler(new JdkDtlsEngineAdapter(engine)));
       } else {
+        // bck
         pipeline.addLast(new DtlsServerHandler(new DtlsServer(sslStream)));
       }
     } catch (SSLException e) {
@@ -47,6 +49,7 @@ public class UdpChannelInitializer extends ChannelInitializer<DatagramChannel> {
     pipeline.addLast(new UdpSenderHandler());
   }
 
+  /** Only support RSA. now!! */
   private SSLContext createSSLContext(SslStream sslStream) throws SSLException {
     return SSLContextFactory.generateDTLSContext(
         sslStream.getCaPath(), sslStream.getCertificatePath(), sslStream.getPrivateKeyPath(), "");

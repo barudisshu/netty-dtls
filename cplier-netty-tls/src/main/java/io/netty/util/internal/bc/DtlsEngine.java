@@ -25,10 +25,8 @@ public class DtlsEngine {
     this.rawTransport = rawTransport;
   }
 
-  public ArrayList<DatagramPacket> read(DatagramPacket msg)
-      throws InterruptedException, ExecutionException, IOException {
-
-    log.trace("DtlsEngine read " + msg);
+  public ArrayList<DatagramPacket> read(DatagramPacket msg) throws IOException {
+    log.trace("DtlsEngine read: {}", msg);
     // add to queue irrespective of whether initialized or not;
     // this way the protocol handshake can retrieve them
     rawTransport.enqueue(msg);
@@ -37,7 +35,7 @@ public class DtlsEngine {
     if (encTransport != null) {
       byte buf[] = new byte[encTransport.getReceiveLimit()];
       while (rawTransport.hasPackets()) {
-        int bytesRead = encTransport.receive(buf, 0, buf.length, 100);
+        int bytesRead = encTransport.receive(buf, 0, buf.length, 60000);
         if (bytesRead > 0) {
           packets.add(
               new DatagramPacket(
@@ -51,7 +49,7 @@ public class DtlsEngine {
   private static void write(DTLSTransport encTransport, DatagramPacket packet) throws IOException {
     ByteBuf byteBuf = packet.content();
     int readableBytes = byteBuf.readableBytes();
-    log.trace("DtlsEngine write " + packet);
+    log.trace("DtlsEngine write: {}", packet);
     byte buf[] = new byte[encTransport.getSendLimit()];
     byteBuf.readBytes(buf, 0, readableBytes);
     byteBuf.release();
@@ -59,7 +57,7 @@ public class DtlsEngine {
   }
 
   public void write(DatagramPacket packet)
-      throws IOException, InterruptedException, ExecutionException {
+      throws IOException {
     if (encTransport != null) {
       write(encTransport, packet);
     } else {
