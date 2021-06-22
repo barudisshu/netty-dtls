@@ -111,4 +111,11 @@ public final class SSLContextFactory {
       throw new SSLException("error occur while generate dtls context", e);
     }
   }
+
+  public static SslStream generateDTLSStream(
+      InputStream caPath,
+      InputStream certificatePath,
+      InputStream privateKeyPath) {
+    return new SslStream(caPath, certificatePath, privateKeyPath);
+  }
 }

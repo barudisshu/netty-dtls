@@ -31,7 +31,7 @@ import java.security.spec.RSAPrivateCrtKeySpec;
 public class NettyTlsUtils extends org.bouncycastle.tls.TlsUtils {
 
   /** No support TLSv1.3 for now */
-  public static Certificate loadCertificateChain(TlsContext context, String[] resources)
+  public static Certificate loadCertificateChain(TlsContext context, InputStream[] resources)
       throws IOException {
     TlsCrypto crypto = context.getCrypto();
     var chain = new TlsCertificate[resources.length];
@@ -41,7 +41,7 @@ public class NettyTlsUtils extends org.bouncycastle.tls.TlsUtils {
     return new Certificate(chain);
   }
 
-  static TlsCertificate loadCertificateResource(TlsCrypto crypto, String resource)
+  static TlsCertificate loadCertificateResource(TlsCrypto crypto, InputStream resource)
       throws IOException {
     PemObject pem = loadPemResource(resource);
     if (pem.getType().endsWith("CERTIFICATE")) {
@@ -50,7 +50,7 @@ public class NettyTlsUtils extends org.bouncycastle.tls.TlsUtils {
     throw new IllegalArgumentException("'resource' doesn't specify a valid certificate");
   }
 
-  public static AsymmetricKeyParameter loadBcPrivateKeyResource(String resource)
+  public static AsymmetricKeyParameter loadBcPrivateKeyResource(InputStream resource)
       throws IOException {
     PemObject pem = loadPemResource(resource);
     if (pem.getType().equals("PRIVATE KEY")) {
@@ -80,7 +80,7 @@ public class NettyTlsUtils extends org.bouncycastle.tls.TlsUtils {
     throw new IllegalArgumentException("'resource' doesn't specify a valid private key");
   }
 
-  public static PrivateKey loadJcaPrivateKeyResource(JcaTlsCrypto crypto, String resource)
+  public static PrivateKey loadJcaPrivateKeyResource(JcaTlsCrypto crypto, InputStream resource)
       throws IOException {
     Throwable cause = null;
     try {
@@ -138,9 +138,8 @@ public class NettyTlsUtils extends org.bouncycastle.tls.TlsUtils {
     return kf.generatePrivate(new PKCS8EncodedKeySpec(encoded));
   }
 
-  private static PemObject loadPemResource(String resource) throws IOException {
-    InputStream s = org.bouncycastle.tls.TlsUtils.class.getResourceAsStream("/" + resource);
-    var p = new PemReader(new InputStreamReader(s));
+  private static PemObject loadPemResource(InputStream inputStream) throws IOException {
+    var p = new PemReader(new InputStreamReader(inputStream));
     var o = p.readPemObject();
     p.close();
     return o;
