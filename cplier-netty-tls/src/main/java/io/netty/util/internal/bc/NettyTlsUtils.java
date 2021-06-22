@@ -1,5 +1,6 @@
 package io.netty.util.internal.bc;
 
+import org.apache.commons.io.IOUtils;
 import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 import org.bouncycastle.asn1.edec.EdECObjectIdentifiers;
 import org.bouncycastle.asn1.pkcs.PKCSObjectIdentifiers;
@@ -19,6 +20,7 @@ import org.bouncycastle.tls.crypto.impl.jcajce.JcaTlsCrypto;
 import org.bouncycastle.util.io.pem.PemObject;
 import org.bouncycastle.util.io.pem.PemReader;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -139,7 +141,9 @@ public class NettyTlsUtils extends org.bouncycastle.tls.TlsUtils {
   }
 
   private static PemObject loadPemResource(InputStream inputStream) throws IOException {
-    var p = new PemReader(new InputStreamReader(inputStream));
+    var p =
+        new PemReader(
+            new InputStreamReader(new ByteArrayInputStream(IOUtils.toByteArray(inputStream))));
     var o = p.readPemObject();
     p.close();
     return o;

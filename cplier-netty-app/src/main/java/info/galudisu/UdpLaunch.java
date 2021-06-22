@@ -43,11 +43,11 @@ public class UdpLaunch implements Launch {
       if (DefaultLoopNativeDetector.IS_EPOLL_OPEN) {
         bootstrap.option(SO_REUSEPORT, true);
         for (var i = 0; i < CPU_CORE; i++) {
-          var channelFuture = bootstrap.bind(1314).sync();
+          var channelFuture = bootstrap.bind(4739).sync();
           channelFutures.add(channelFuture);
         }
       } else {
-        var channelFuture = bootstrap.bind(1314).sync();
+        var channelFuture = bootstrap.bind(4739).sync();
         channelFutures.add(channelFuture);
       }
 
