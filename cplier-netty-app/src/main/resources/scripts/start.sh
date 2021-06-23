@@ -19,7 +19,7 @@ pid=$( check_pid $PID_FILE )
 if [[ ! -z "$pid" && "$pid" != " " ]];then
     echo "http2 server is already running."
 else
-		nohup java ${JAVA_OPTS} -jar ${workdir}/netty-dtls-1.0-SNAPSHOT.jar > ${NOHUP_FILE} < /dev/null 2>&1 &
+		nohup java ${JAVA_OPTS} -jar ${workdir}/cplier-netty-app-1.0-SNAPSHOT.jar > ${NOHUP_FILE} < /dev/null 2>&1 &
 		pid=$!
 		sleep 1
 		echo "start http2 server successfully!"
