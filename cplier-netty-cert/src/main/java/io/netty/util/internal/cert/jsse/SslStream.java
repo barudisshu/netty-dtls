@@ -10,7 +10,7 @@ import java.io.InputStream;
 /**
  * Only support RSA. now!!
  *
- * @author ehcayen
+ * @author galudisu
  */
 @Getter
 @Setter
