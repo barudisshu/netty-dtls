@@ -85,7 +85,7 @@ For client： ca.crt, client.crt, pkcs8_client.key
 
 ```shell
 openssl s_server -CAfile ca.crt -cert server.crt -key pkcs8_server.key -dtls -accept 4739 -verify_return_error -Verify 1
-openssl s_client -dtls -CAfile ca.crt -cert client.crt -key pkcs8_client.key -connect 127.0.0.1:4739 -debug
+openssl s_client -dtls -CAfile ca.crt -cert client.crt -key pkcs8_client.key -connect 127.0.0.1:4739 -tlsextdebug -msg -debug
 ```
 
 ## http2 with certificate
