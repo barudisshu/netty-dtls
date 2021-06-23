@@ -12,6 +12,10 @@ import java.net.InetSocketAddress;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * TODO: check heartbeat message.
+ * @author galudisu
+ */
 class DtlsHandlerTransport implements DatagramTransport {
 
   private static final Logger log = LoggerFactory.getLogger(DtlsHandlerTransport.class);

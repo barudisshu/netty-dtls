@@ -35,6 +35,16 @@ public class DtlsServer extends DefaultTlsServer {
   }
 
   @Override
+  public short getHeartbeatPolicy() {
+    return HeartbeatMode.peer_allowed_to_send;
+  }
+
+  @Override
+  public TlsHeartbeat getHeartbeat() {
+    return new DefaultTlsHeartbeat(10_000, 10_000);
+  }
+
+  @Override
   protected TlsCredentialedDecryptor getRSAEncryptionCredentials() throws IOException {
     var certs =
         NettyTlsUtils.loadCertificateChain(
