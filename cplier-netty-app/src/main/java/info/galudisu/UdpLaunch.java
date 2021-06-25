@@ -38,7 +38,7 @@ public class UdpLaunch implements Launch {
           .option(ChannelOption.SO_REUSEADDR, true)
           .option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
           .channel(DefaultLoopNativeDetector.INSTANCE.getChannelClass(DatagramChannel.class))
-          .handler(new UdpChannelInitializer(sslStream(), true));
+          .handler(new UdpChannelInitializer(sslStream(), false));
 
       if (DefaultLoopNativeDetector.IS_EPOLL_OPEN) {
         bootstrap.option(SO_REUSEPORT, true);

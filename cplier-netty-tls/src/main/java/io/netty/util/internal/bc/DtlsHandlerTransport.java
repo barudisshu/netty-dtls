@@ -14,6 +14,7 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * TODO: check heartbeat message.
+ *
  * @author galudisu
  */
 class DtlsHandlerTransport implements DatagramTransport {
@@ -30,17 +31,25 @@ class DtlsHandlerTransport implements DatagramTransport {
 
   @Override
   public void send(byte[] buf, int off, int len) throws IOException {
-    log.trace(" send {} bytes", len);
+    log.debug(" send {} bytes", len);
     var packet = new DatagramPacket(Unpooled.copiedBuffer(buf, off, len), remoteAddress);
     channel.writeAndFlush(new DtlsPacket(packet));
   }
 
   @Override
   public int receive(byte[] buf, int off, int len, int waitMillis) throws IOException {
-    log.trace(" receive ");
+    int received = receivedRecord(buf, off, len, waitMillis);
+    if (received >= 0) {
+      return received;
+    }
+    return -1;
+  }
+
+  private int receivedRecord(byte[] buf, int off, int len, int waitMillis) throws IOException {
+    log.debug(" receive ");
     try {
       DatagramPacket packet = readQueue.poll(waitMillis, TimeUnit.MILLISECONDS);
-      log.trace(" receive polled: {}", packet);
+      log.debug(" receive polled: {}", packet);
       if (packet != null) {
         var byteBuf = packet.content();
         int bytesToRead = Math.min(byteBuf.readableBytes(), len);
@@ -48,12 +57,12 @@ class DtlsHandlerTransport implements DatagramTransport {
         byteBuf.release();
         return bytesToRead;
       } else {
-        return 0;
+        return -1;
       }
     } catch (InterruptedException e) {
       log.error("dtls interrupted", e);
       Thread.currentThread().interrupt();
-      return 0;
+      return -1;
     }
   }
 
