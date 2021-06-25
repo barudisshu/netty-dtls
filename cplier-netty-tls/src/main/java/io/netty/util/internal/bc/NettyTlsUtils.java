@@ -141,9 +141,7 @@ public class NettyTlsUtils extends org.bouncycastle.tls.TlsUtils {
   }
 
   private static PemObject loadPemResource(InputStream inputStream) throws IOException {
-    var p =
-        new PemReader(
-            new InputStreamReader(new ByteArrayInputStream(IOUtils.toByteArray(inputStream))));
+    var p = new PemReader(new InputStreamReader(inputStream));
     var o = p.readPemObject();
     p.close();
     return o;

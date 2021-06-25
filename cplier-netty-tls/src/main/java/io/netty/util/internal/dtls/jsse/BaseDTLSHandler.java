@@ -187,10 +187,7 @@ public abstract class BaseDTLSHandler extends ChannelDuplexHandler implements In
       SocketAddress localAddress,
       ChannelPromise promise)
       throws Exception {
-
     InetSocketAddress remote = (InetSocketAddress) remoteAddress;
-
-    var registerHandshake = false;
     if (remotePeer != null) {
       if (!remotePeer.equals(remote)) {
         log.error(
@@ -205,22 +202,20 @@ public abstract class BaseDTLSHandler extends ChannelDuplexHandler implements In
                     + " and so cannot be connected to "
                     + remoteAddress));
         return;
-      } else {
-        registerHandshake = true;
       }
     } else {
       remotePeer = remote;
-      registerHandshake = true;
     }
 
-    if (registerHandshake) {
-      promise.addListener(
-          f -> {
-            if (f.isSuccess()) {
-              beginHandShake(ctx);
-            }
-          });
-    }
+    log.debug("Handshake register");
+
+    promise.addListener(
+        f -> {
+          if (f.isSuccess()) {
+            beginHandShake(ctx);
+          } else {
+          }
+        });
     super.connect(ctx, remoteAddress, localAddress, promise);
   }
 
@@ -372,7 +367,6 @@ public abstract class BaseDTLSHandler extends ChannelDuplexHandler implements In
         case DATA_TO_SEND:
           log.debug("Generating handshake data to send to {}", remotePeer);
           ChannelFuture tmp = handshakeWrap(ctx);
-
           if (cf == null) {
             cf = tmp;
           } else {
@@ -663,7 +657,7 @@ public abstract class BaseDTLSHandler extends ChannelDuplexHandler implements In
     ChannelFuture cf = null;
 
     try {
-      boolean overflow = false;
+      var overflow = false;
       loop:
       for (; ; ) {
         DtlsEngineResult result;
@@ -759,6 +753,10 @@ public abstract class BaseDTLSHandler extends ChannelDuplexHandler implements In
 
   protected boolean isHandshakeMessage(ByteBuf buf) {
     return ContentType.handshake == buf.getUnsignedByte(buf.readerIndex());
+  }
+
+  protected boolean isHeartbeatMessage(ByteBuf buf) {
+    return ContentType.heartbeat == buf.getUnsignedByte(buf.readerIndex());
   }
 
   protected short getHandshakeMessageType(ByteBuf buf) {

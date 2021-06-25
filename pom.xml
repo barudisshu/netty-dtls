@@ -10,6 +10,7 @@
         <module>cplier-netty-cert</module>
         <module>cplier-netty-tls</module>
         <module>cplier-netty-app</module>
+        <module>bctls-jdk15on</module>
     </modules>
     <packaging>pom</packaging>
 
@@ -59,12 +60,12 @@
             </dependency>
             <dependency>
                 <groupId>org.bouncycastle</groupId>
-                <artifactId>bcpkix-jdk15on</artifactId>
+                <artifactId>bcutil-jdk15on</artifactId>
                 <version>1.69</version>
             </dependency>
             <dependency>
                 <groupId>org.bouncycastle</groupId>
-                <artifactId>bctls-jdk15on</artifactId>
+                <artifactId>bcpkix-jdk15on</artifactId>
                 <version>1.69</version>
             </dependency>
             <dependency>

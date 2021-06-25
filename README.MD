@@ -85,7 +85,7 @@ For client： ca.crt, client.crt, pkcs8_client.key
 
 ```shell
 openssl s_server -CAfile ca.crt -cert server.crt -key pkcs8_server.key -dtls -accept 4739 -verify_return_error -Verify 1
-openssl s_client -dtls -CAfile ca.crt -cert client.crt -key pkcs8_client.key -connect 127.0.0.1:4739 -tlsextdebug -msg -debug
+openssl s_client -dtls -CAfile ca.crt -cert client.crt -key pkcs8_client.key -connect 127.0.0.1:4739 -debug
 ```
 
 ## http2 with certificate
@@ -114,6 +114,17 @@ curl -k -vvvv \
 ```
 
 Use `output` to print response message:  
+
+
+## Tcpdump
+
+For windows just using wireshark to capture packet, for linux please type:
+
+```shell
+sudo tcpdump -i lo -s 0 -w tcpdump.pcap -n udp port 4739 -X
+```
+
+to up the length to "a lot", write the data to a file and use host rather than src to capture the data in both directions. Essentially you are missing the word and between src and udp.
 
 ## Remaining
 

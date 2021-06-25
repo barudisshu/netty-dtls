@@ -17,6 +17,7 @@ import java.security.SecureRandom;
 import java.util.Vector;
 
 public class DtlsClient {
+
   public static void main(String[] args) throws Exception {
     var crypto = new BcTlsCrypto(new SecureRandom());
     var client =
@@ -89,7 +90,7 @@ public class DtlsClient {
 
     int port = 4739;
 
-    final DatagramSocket socket = new DatagramSocket();
+    final DatagramSocket socket = new DatagramSocket(0);
     socket.connect(InetAddress.getLocalHost(), port);
 
     final int mtu = 1500;
@@ -102,11 +103,10 @@ public class DtlsClient {
     System.out.println("Send limit: " + dtls.getSendLimit());
 
     // Send and hopefully receive a packet back
-    byte[] request = "Hello World!\n".getBytes(StandardCharsets.UTF_8);
+    byte[] request = "Hello World!".getBytes(StandardCharsets.UTF_8);
     dtls.send(request, 0, request.length);
 
     byte[] buf = new byte[dtls.getReceiveLimit()];
-
     while (!socket.isClosed()) {
       try {
         int len = dtls.receive(buf, 0, buf.length, 60000);
