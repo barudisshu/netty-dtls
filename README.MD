@@ -115,3 +115,6 @@ curl -k -vvvv \
 
 Use `output` to print response message:  
 
+## Remaining
+
+Not support _"heartbeat extension"_ 

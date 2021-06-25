@@ -36,7 +36,6 @@ public class JdkDtlsEngineAdapter implements DtlsEngine {
     if (bytesConsumed > 0) {
       input.skipBytes(bytesConsumed);
     }
-
     int bytesProduced = result.bytesProduced();
     if (bytesProduced > 0) {
       output.writerIndex(output.writerIndex() + bytesProduced);
