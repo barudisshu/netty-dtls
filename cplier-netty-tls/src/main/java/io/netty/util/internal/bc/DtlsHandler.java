@@ -4,6 +4,7 @@ import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPromise;
 import io.netty.channel.socket.DatagramPacket;
+import io.netty.util.internal.resources.thread.LocalThreadFactory;
 import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.tls.DTLSTransport;
 
@@ -13,6 +14,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Slf4j
 public abstract class DtlsHandler extends ChannelDuplexHandler {
@@ -30,16 +32,16 @@ public abstract class DtlsHandler extends ChannelDuplexHandler {
 
   private final LinkedBlockingQueue<ChannelContext> writeCtxQueue = new LinkedBlockingQueue<>();
 
-  private final ExecutorService executor = Executors.newSingleThreadExecutor();
+  private final ExecutorService executor =
+      Executors.newSingleThreadExecutor(
+          new LocalThreadFactory(true, new AtomicInteger(), "DTLS-TRANSPORT"));
   protected final DtlsHandlerTransport rawTransport = new DtlsHandlerTransport();
   private final DtlsEngine engine = new DtlsEngine(rawTransport);
 
   @Override
   public void channelActive(final ChannelHandlerContext ctx) throws Exception {
     super.channelActive(ctx);
-
     rawTransport.setChannel(ctx.channel());
-
     executor.submit(
         () -> {
           try {
