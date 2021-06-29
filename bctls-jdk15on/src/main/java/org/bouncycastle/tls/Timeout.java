@@ -1,5 +1,7 @@
 package org.bouncycastle.tls;
 
+import java.util.StringJoiner;
+
 class Timeout
 {
     private long durationMillis;
@@ -121,5 +123,10 @@ class Timeout
     static boolean hasExpired(Timeout timeout, long currentTimeMillis)
     {
         return null != timeout && timeout.remainingMillis(currentTimeMillis) < 1L;
+    }
+
+    @Override
+    public String toString() {
+        return new StringJoiner(", ", Timeout.class.getSimpleName() + "[", "]").add("durationMillis=" + durationMillis).add("startMillis=" + startMillis).toString();
     }
 }

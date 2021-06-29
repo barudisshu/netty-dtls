@@ -35,7 +35,7 @@ public class DtlsEngine {
     if (encTransport != null) {
       byte buf[] = new byte[encTransport.getReceiveLimit()];
       while (rawTransport.hasPackets()) {
-        int bytesRead = encTransport.receive(buf, 0, buf.length, 60000);
+        int bytesRead = encTransport.receive(buf, 0, buf.length, 600);
         if (bytesRead > 0) {
           packets.add(
               new DatagramPacket(

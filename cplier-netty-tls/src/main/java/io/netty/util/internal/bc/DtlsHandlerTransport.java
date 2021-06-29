@@ -8,7 +8,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.NetworkInterface;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
@@ -21,8 +23,17 @@ class DtlsHandlerTransport implements DatagramTransport {
 
   private static final Logger log = LoggerFactory.getLogger(DtlsHandlerTransport.class);
 
-  public static final int RECV_BUFFER_SIZE = 65536;
-  public static final int SEND_BUFFER_SIZE = 65536;
+  private static int mtu = 1500;
+
+  static {
+    try {
+      mtu = NetworkInterface.getByInetAddress(InetAddress.getLocalHost()).getMTU();
+    } catch (Exception ignored) { // NOSONAR
+    }
+  }
+
+  public static final int RECV_BUFFER_SIZE = mtu - 31;
+  public static final int SEND_BUFFER_SIZE = mtu - 31;
 
   private final LinkedBlockingQueue<DatagramPacket> readQueue = new LinkedBlockingQueue<>();
 
@@ -38,14 +49,6 @@ class DtlsHandlerTransport implements DatagramTransport {
 
   @Override
   public int receive(byte[] buf, int off, int len, int waitMillis) throws IOException {
-    int received = receivedRecord(buf, off, len, waitMillis);
-    if (received >= 0) {
-      return received;
-    }
-    return -1;
-  }
-
-  private int receivedRecord(byte[] buf, int off, int len, int waitMillis) throws IOException {
     log.debug(" receive ");
     try {
       DatagramPacket packet = readQueue.poll(waitMillis, TimeUnit.MILLISECONDS);

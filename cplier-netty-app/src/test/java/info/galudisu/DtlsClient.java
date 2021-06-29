@@ -34,6 +34,11 @@ public class DtlsClient {
           }
 
           @Override
+          public TlsHeartbeat getHeartbeat() {
+            return new DefaultTlsHeartbeat(10_000, 10_000);
+          }
+
+          @Override
           public TlsAuthentication getAuthentication() throws IOException {
             return new TlsAuthentication() {
               @Override

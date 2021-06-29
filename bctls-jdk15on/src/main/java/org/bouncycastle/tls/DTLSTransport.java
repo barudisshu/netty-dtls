@@ -28,6 +28,7 @@ public class DTLSTransport
     public int receive(byte[] buf, int off, int len, int waitMillis)
         throws IOException
     {
+        System.out.println("receiving... ");
         if (null == buf)
         {
             throw new NullPointerException("'buf' cannot be null");
