@@ -5,8 +5,6 @@ import io.netty.channel.ChannelPipeline;
 import io.netty.channel.socket.DatagramChannel;
 import io.netty.util.internal.bc.DtlsServer;
 import io.netty.util.internal.bc.DtlsServerHandler;
-import io.netty.util.internal.cert.jsse.SSLContextFactory;
-import io.netty.util.internal.cert.jsse.SslStream;
 import io.netty.util.internal.dtls.adapter.JdkDtlsEngineAdapter;
 import io.netty.util.internal.dtls.jsse.ServerDTLSHandler;
 import lombok.extern.slf4j.Slf4j;
@@ -14,16 +12,15 @@ import lombok.extern.slf4j.Slf4j;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLEngine;
 import javax.net.ssl.SSLException;
-import java.security.Security;
 
 @Slf4j
 public class UdpChannelInitializer extends ChannelInitializer<DatagramChannel> {
 
-  private final SslStream sslStream;
+  private final SSLContext sslContext;
   private final boolean isJdkSsl;
 
-  public UdpChannelInitializer(SslStream sslStream, boolean isJdkSsl) {
-    this.sslStream = sslStream;
+  public UdpChannelInitializer(SSLContext sslContext, boolean isJdkSsl) {
+    this.sslContext = sslContext;
     this.isJdkSsl = isJdkSsl;
   }
 
@@ -31,29 +28,16 @@ public class UdpChannelInitializer extends ChannelInitializer<DatagramChannel> {
   protected void initChannel(DatagramChannel ch) {
     ChannelPipeline pipeline = ch.pipeline();
 
-    try {
-      if (isJdkSsl) {
-        // jdk
-        var sslContext = createSSLContext(sslStream);
-        var engine = createSSLEngine(sslContext);
-        pipeline.addLast(new ServerDTLSHandler(new JdkDtlsEngineAdapter(engine)));
-      } else {
-        // bck
-        pipeline.addLast(new DtlsServerHandler(new DtlsServer(sslStream)));
-      }
-    } catch (SSLException e) {
-      log.error("could not install certificate", e);
-      return;
+    if (isJdkSsl) {
+      // jdk
+      var engine = createSSLEngine(sslContext);
+      pipeline.addLast(new ServerDTLSHandler(new JdkDtlsEngineAdapter(engine)));
+    } else {
+      // bck
+      pipeline.addLast(new DtlsServerHandler(new DtlsServer()));
     }
-
     pipeline.addLast(new UdpServerHandler());
     pipeline.addLast(new UdpSenderHandler());
-  }
-
-  /** Only support RSA. now!! */
-  private SSLContext createSSLContext(SslStream sslStream) throws SSLException {
-    return SSLContextFactory.generateDTLSContext(
-        sslStream.getCaPath(), sslStream.getCertificatePath(), sslStream.getPrivateKeyPath(), "");
   }
 
   /**

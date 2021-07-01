@@ -12,6 +12,7 @@ import io.netty.util.internal.cert.jsse.SslStream;
 import io.netty.util.internal.resources.platform.DefaultLoopNativeDetector;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.net.ssl.SSLContext;
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -38,7 +39,7 @@ public class UdpLaunch implements Launch {
           .option(ChannelOption.SO_REUSEADDR, true)
           .option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
           .channel(DefaultLoopNativeDetector.INSTANCE.getChannelClass(DatagramChannel.class))
-          .handler(new UdpChannelInitializer(sslStream(), false));
+          .handler(new UdpChannelInitializer(sslContext(), false));
 
       if (DefaultLoopNativeDetector.IS_EPOLL_OPEN) {
         bootstrap.option(SO_REUSEPORT, true);
@@ -58,18 +59,19 @@ public class UdpLaunch implements Launch {
     }
   }
 
-  private SslStream sslStream() {
-    SslStream sslStream = null;
+  private SSLContext sslContext() {
+    SSLContext sslContext = null;
     try {
-      sslStream =
-          SSLContextFactory.generateDTLSStream(
+      sslContext =
+          SSLContextFactory.generateDTLSContext(
               getPath("openssl/ca.crt"),
               getPath("openssl/server.crt"),
-              getPath("openssl/server.key"));
+              getPath("openssl/server.key"),
+              "");
     } catch (IOException e) {
       log.debug("rollback to udp");
     }
-    return sslStream;
+    return sslContext;
   }
 
   public void closeChannel() {

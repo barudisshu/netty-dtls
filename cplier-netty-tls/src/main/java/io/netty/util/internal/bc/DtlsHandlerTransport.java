@@ -35,6 +35,7 @@ class DtlsHandlerTransport implements DatagramTransport {
   public static final int RECV_BUFFER_SIZE = mtu - 31;
   public static final int SEND_BUFFER_SIZE = mtu - 31;
 
+  // todo: replace to no-blocking ring-buffer to reduce latency
   private final LinkedBlockingQueue<DatagramPacket> readQueue = new LinkedBlockingQueue<>();
 
   private Channel channel = null;

@@ -16,14 +16,16 @@ import java.security.SecureRandom;
 @Slf4j
 public class DtlsServer extends DefaultTlsServer {
 
-  private final SslStream sslStream;
   private AsymmetricKeyParameter privateKey;
 
-  public DtlsServer(SslStream sslStream) {
+  public DtlsServer() {
     super(new BcTlsCrypto(new SecureRandom()));
-    this.sslStream = sslStream;
     try {
-      privateKey = NettyTlsUtils.loadBcPrivateKeyResource(sslStream.getPrivateKeyPath());
+      privateKey =
+          NettyTlsUtils.loadBcPrivateKeyResource(
+              Thread.currentThread()
+                  .getContextClassLoader()
+                  .getResourceAsStream("openssl/server.key"));
     } catch (IOException e) {
       e.printStackTrace();
     }
@@ -48,7 +50,12 @@ public class DtlsServer extends DefaultTlsServer {
   protected TlsCredentialedDecryptor getRSAEncryptionCredentials() throws IOException {
     var certs =
         NettyTlsUtils.loadCertificateChain(
-            context, new InputStream[] {sslStream.getCertificatePath()});
+            context,
+            new InputStream[] {
+              Thread.currentThread()
+                  .getContextClassLoader()
+                  .getResourceAsStream("openssl/server.crt")
+            });
 
     return new BcDefaultTlsCredentialedDecryptor(
         (BcTlsCrypto) context.getCrypto(), certs, privateKey);
@@ -76,7 +83,13 @@ public class DtlsServer extends DefaultTlsServer {
     }
     var certs =
         NettyTlsUtils.loadCertificateChain(
-            context, new InputStream[] {sslStream.getCertificatePath(), sslStream.getCaPath()});
+            context,
+            new InputStream[] {
+              Thread.currentThread()
+                  .getContextClassLoader()
+                  .getResourceAsStream("openssl/server.crt"),
+              Thread.currentThread().getContextClassLoader().getResourceAsStream("openssl/ca.crt")
+            });
     return new BcDefaultTlsCredentialedSigner(
         new TlsCryptoParameters(context),
         (BcTlsCrypto) context.getCrypto(),

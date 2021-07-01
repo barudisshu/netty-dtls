@@ -133,7 +133,7 @@ public class DtlsServer {
           dtls.send(buf, 0, len);
         }
       } catch (SocketTimeoutException ste) {
-
+          ste.printStackTrace();
       }
     }
 
