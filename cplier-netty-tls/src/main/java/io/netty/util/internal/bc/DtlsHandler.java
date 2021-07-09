@@ -35,6 +35,7 @@ public abstract class DtlsHandler extends ChannelDuplexHandler {
   private final ExecutorService executor =
       Executors.newSingleThreadExecutor(
           new LocalThreadFactory(true, new AtomicInteger(), "DTLS-TRANSPORT"));
+
   protected final DtlsHandlerTransport rawTransport = new DtlsHandlerTransport();
   private final DtlsEngine engine = new DtlsEngine(rawTransport);
 

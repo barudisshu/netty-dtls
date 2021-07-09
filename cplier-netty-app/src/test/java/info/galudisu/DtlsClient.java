@@ -15,6 +15,10 @@ import java.net.SocketTimeoutException;
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.util.Vector;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.IntStream;
 
 public class DtlsClient {
 
@@ -95,7 +99,7 @@ public class DtlsClient {
 
     int port = 4739;
 
-    final DatagramSocket socket = new DatagramSocket(0);
+    final DatagramSocket socket = new DatagramSocket(6573);
     socket.connect(InetAddress.getLocalHost(), port);
 
     final int mtu = 1500;
@@ -109,7 +113,24 @@ public class DtlsClient {
 
     // Send and hopefully receive a packet back
     byte[] request = "Hello World!".getBytes(StandardCharsets.UTF_8);
-    dtls.send(request, 0, request.length);
+
+    ExecutorService executorService = Executors.newWorkStealingPool();
+
+    //      dtls.send(request, 0, request.length);
+
+    executorService.submit(
+        () ->
+            IntStream.range(0, 30000)
+                .parallel()
+                .forEach(
+                    i -> {
+                      try {
+                        TimeUnit.MILLISECONDS.sleep(10);
+                        dtls.send(request, 0, request.length);
+                      } catch (IOException | InterruptedException e) {
+                        e.printStackTrace();
+                      }
+                    }));
 
     byte[] buf = new byte[dtls.getReceiveLimit()];
     while (!socket.isClosed()) {

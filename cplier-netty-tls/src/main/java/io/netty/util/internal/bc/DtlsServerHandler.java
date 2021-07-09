@@ -26,6 +26,8 @@ public class DtlsServerHandler extends DtlsHandler {
   public void channelRead(ChannelHandlerContext ctx, Object obj) throws Exception {
     if (obj instanceof DatagramPacket) {
       DatagramPacket msg = (DatagramPacket) obj;
+      // day0
+
       rawTransport.setRemoteAddress(msg.sender());
     }
 
