@@ -1,24 +1,21 @@
 package info.galudisu;
 
-import io.netty.util.internal.bc.NettyTlsUtils;
+import io.netty.util.internal.utils.CertUtil;
 import org.bouncycastle.crypto.params.AsymmetricKeyParameter;
 import org.bouncycastle.tls.*;
 import org.bouncycastle.tls.crypto.impl.bc.BcDefaultTlsCredentialedDecryptor;
 import org.bouncycastle.tls.crypto.impl.bc.BcTlsCrypto;
 import org.bouncycastle.util.Arrays;
 
+import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketTimeoutException;
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
+import java.util.Objects;
 import java.util.Vector;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.IntStream;
 
 public class DtlsClient {
 
@@ -43,11 +40,10 @@ public class DtlsClient {
           }
 
           @Override
-          public TlsAuthentication getAuthentication() throws IOException {
+          public TlsAuthentication getAuthentication() {
             return new TlsAuthentication() {
               @Override
-              public void notifyServerCertificate(TlsServerCertificate serverCertificate)
-                  throws IOException {}
+              public void notifyServerCertificate(TlsServerCertificate serverCertificate) {}
 
               @Override
               public TlsCredentials getClientCredentials(CertificateRequest certificateRequest)
@@ -75,21 +71,32 @@ public class DtlsClient {
                   }
                 }
                 var certs =
-                    NettyTlsUtils.loadCertificateChain(
-                        context,
-                        new InputStream[] {
-                          Thread.currentThread()
-                              .getContextClassLoader()
-                              .getResourceAsStream("openssl/client.crt"),
-                          Thread.currentThread()
-                              .getContextClassLoader()
-                              .getResourceAsStream("openssl/ca.crt")
-                        });
+                    CertUtil.loadBcCertificateChain(
+                        context.getCrypto(),
+                        new File(
+                            Objects.requireNonNull(
+                                    Thread.currentThread()
+                                        .getContextClassLoader()
+                                        .getResource("openssl/client.crt"))
+                                .getPath()),
+                        new File(
+                            Objects.requireNonNull(
+                                    Thread.currentThread()
+                                        .getContextClassLoader()
+                                        .getResource("openssl/ca.crt"))
+                                .getPath()));
                 AsymmetricKeyParameter privateKey =
-                    NettyTlsUtils.loadBcPrivateKeyResource(
-                        Thread.currentThread()
-                            .getContextClassLoader()
-                            .getResourceAsStream("openssl/client.key"));
+                    CertUtil.loadBcPrivateKeyResource(
+                        new File(
+                            Objects.requireNonNull(
+                                    Thread.currentThread()
+                                        .getContextClassLoader()
+                                        .getResource("openssl/pkcs8_client.key"))
+                                .getPath()),
+                        "client");
+                if (certs == null || privateKey == null) {
+                  throw new TlsFatalAlert(AlertDescription.internal_error);
+                }
                 return new BcDefaultTlsCredentialedDecryptor(
                     (BcTlsCrypto) context.getCrypto(), certs, privateKey);
               }
@@ -112,25 +119,8 @@ public class DtlsClient {
     System.out.println("Send limit: " + dtls.getSendLimit());
 
     // Send and hopefully receive a packet back
-    byte[] request = "Hello World!".getBytes(StandardCharsets.UTF_8);
-
-    ExecutorService executorService = Executors.newWorkStealingPool();
-
-    //      dtls.send(request, 0, request.length);
-
-    executorService.submit(
-        () ->
-            IntStream.range(0, 30000)
-                .parallel()
-                .forEach(
-                    i -> {
-                      try {
-                        TimeUnit.MILLISECONDS.sleep(10);
-                        dtls.send(request, 0, request.length);
-                      } catch (IOException | InterruptedException e) {
-                        e.printStackTrace();
-                      }
-                    }));
+    byte[] request = "Hello World".getBytes(StandardCharsets.UTF_8);
+    dtls.send(request, 0, request.length);
 
     byte[] buf = new byte[dtls.getReceiveLimit()];
     while (!socket.isClosed()) {

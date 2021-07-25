@@ -1,6 +1,6 @@
 package info.galudisu;
 
-import io.netty.util.internal.bc.NettyTlsUtils;
+import io.netty.util.internal.utils.CertUtil;
 import org.bouncycastle.crypto.params.AsymmetricKeyParameter;
 import org.bouncycastle.tls.*;
 import org.bouncycastle.tls.crypto.TlsCryptoParameters;
@@ -8,13 +8,13 @@ import org.bouncycastle.tls.crypto.impl.bc.BcDefaultTlsCredentialedDecryptor;
 import org.bouncycastle.tls.crypto.impl.bc.BcDefaultTlsCredentialedSigner;
 import org.bouncycastle.tls.crypto.impl.bc.BcTlsCrypto;
 
+import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.SocketTimeoutException;
 import java.security.SecureRandom;
-import java.util.Vector;
+import java.util.Objects;
 
 public class DtlsServer {
   public static void main(String[] args) throws Exception {
@@ -40,30 +40,37 @@ public class DtlsServer {
           @Override
           protected TlsCredentialedDecryptor getRSAEncryptionCredentials() throws IOException {
             Certificate certs =
-                NettyTlsUtils.loadCertificateChain(
-                    context,
-                    new InputStream[] {
-                      Thread.currentThread()
-                          .getContextClassLoader()
-                          .getResourceAsStream("openssl/server.crt")
-                    });
+                CertUtil.loadBcCertificateChain(
+                    context.getCrypto(),
+                    new File(
+                        Objects.requireNonNull(
+                                Thread.currentThread()
+                                    .getContextClassLoader()
+                                    .getResource("openssl/server.crt"))
+                            .getPath()));
             AsymmetricKeyParameter privateKey =
-                NettyTlsUtils.loadBcPrivateKeyResource(
-                    Thread.currentThread()
-                        .getContextClassLoader()
-                        .getResourceAsStream("openssl/server.key"));
-
+                CertUtil.loadBcPrivateKeyResource(
+                    new File(
+                        Objects.requireNonNull(
+                                Thread.currentThread()
+                                    .getContextClassLoader()
+                                    .getResource("openssl/pkcs8_server.key"))
+                            .getPath()),
+                    "server");
+            if (certs == null || privateKey == null) {
+              throw new TlsFatalAlert(AlertDescription.internal_error);
+            }
             return new BcDefaultTlsCredentialedDecryptor(
                 (BcTlsCrypto) context.getCrypto(), certs, privateKey);
           }
 
           @Override
           protected TlsCredentialedSigner getRSASignerCredentials() throws IOException {
-            Vector sigAlgs = context.getSecurityParametersHandshake().getClientSigAlgs();
+            var sigAlgs = context.getSecurityParametersHandshake().getClientSigAlgs(); // NOSONAR
 
             if (sigAlgs == null) {
               // only support rsa !! for now.
-              sigAlgs = NettyTlsUtils.getDefaultSignatureAlgorithms(SignatureAlgorithm.rsa);
+              sigAlgs = TlsUtils.getDefaultSignatureAlgorithms(SignatureAlgorithm.rsa);
             }
             SignatureAndHashAlgorithm signatureAndHashAlgorithm = null;
             for (var i = 0; i < sigAlgs.size(); ++i) {
@@ -79,21 +86,32 @@ public class DtlsServer {
               return null;
             }
             var certs =
-                NettyTlsUtils.loadCertificateChain(
-                    context,
-                    new InputStream[] {
-                      Thread.currentThread()
-                          .getContextClassLoader()
-                          .getResourceAsStream("openssl/server.crt"),
-                      Thread.currentThread()
-                          .getContextClassLoader()
-                          .getResourceAsStream("openssl/ca.crt")
-                    });
+                CertUtil.loadBcCertificateChain(
+                    context.getCrypto(),
+                    new File(
+                        Objects.requireNonNull(
+                                Thread.currentThread()
+                                    .getContextClassLoader()
+                                    .getResource("openssl/server.crt"))
+                            .getPath()),
+                    new File(
+                        Objects.requireNonNull(
+                                Thread.currentThread()
+                                    .getContextClassLoader()
+                                    .getResource("openssl/ca.crt"))
+                            .getPath()));
             AsymmetricKeyParameter privateKey =
-                NettyTlsUtils.loadBcPrivateKeyResource(
-                    Thread.currentThread()
-                        .getContextClassLoader()
-                        .getResourceAsStream("openssl/server.key"));
+                CertUtil.loadBcPrivateKeyResource(
+                    new File(
+                        Objects.requireNonNull(
+                                Thread.currentThread()
+                                    .getContextClassLoader()
+                                    .getResource("openssl/pkcs8_server.key"))
+                            .getPath()),
+                    "server");
+            if (certs == null || privateKey == null) {
+              throw new TlsFatalAlert(AlertDescription.internal_error);
+            }
             return new BcDefaultTlsCredentialedSigner(
                 new TlsCryptoParameters(context),
                 (BcTlsCrypto) context.getCrypto(),
@@ -133,7 +151,7 @@ public class DtlsServer {
           dtls.send(buf, 0, len);
         }
       } catch (SocketTimeoutException ste) {
-          ste.printStackTrace();
+        ste.printStackTrace();
       }
     }
 
