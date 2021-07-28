@@ -2,15 +2,14 @@ package io.netty.util.internal.utils;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.asn1.ASN1Encodable;
 import org.bouncycastle.asn1.DERSequence;
+import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x509.BasicConstraints;
 import org.bouncycastle.asn1.x509.Extension;
 import org.bouncycastle.asn1.x509.GeneralName;
 import org.bouncycastle.asn1.x509.KeyUsage;
-import org.bouncycastle.cert.CertIOException;
 import org.bouncycastle.cert.X509CertificateHolder;
 import org.bouncycastle.cert.X509v3CertificateBuilder;
 import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
@@ -18,9 +17,14 @@ import org.bouncycastle.cert.jcajce.JcaX509ExtensionUtils;
 import org.bouncycastle.cert.jcajce.JcaX509v3CertificateBuilder;
 import org.bouncycastle.crypto.params.AsymmetricKeyParameter;
 import org.bouncycastle.crypto.util.PrivateKeyFactory;
+import org.bouncycastle.crypto.util.PrivateKeyInfoFactory;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.bouncycastle.openssl.PKCS8Generator;
+import org.bouncycastle.openssl.jcajce.JcaPEMWriter;
+import org.bouncycastle.openssl.jcajce.JceOpenSSLPKCS8EncryptorBuilder;
 import org.bouncycastle.operator.ContentSigner;
 import org.bouncycastle.operator.OperatorCreationException;
+import org.bouncycastle.operator.OutputEncryptor;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 import org.bouncycastle.pkcs.PKCS10CertificationRequest;
 import org.bouncycastle.pkcs.PKCS10CertificationRequestBuilder;
@@ -30,10 +34,13 @@ import org.bouncycastle.tls.crypto.TlsCertificate;
 import org.bouncycastle.tls.crypto.impl.bc.BcTlsCertificate;
 import org.bouncycastle.tls.crypto.impl.bc.BcTlsCrypto;
 import org.bouncycastle.util.encoders.Base64;
+import org.bouncycastle.util.io.pem.PemObjectGenerator;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.security.*;
 import java.security.cert.CertificateEncodingException;
@@ -51,11 +58,10 @@ import java.util.List;
  * @see CertUtil
  * @author ehcayen
  */
-@Slf4j
 public final class BcGeneratorUtil {
 
   static {
-    Security.addProvider(new BouncyCastleProvider());
+    Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
   }
 
   private BcGeneratorUtil() {}
@@ -108,7 +114,7 @@ public final class BcGeneratorUtil {
           KeyStoreException, NoSuchProviderException {
     JcaKeyPair jcaKeyPair = generateX509CaChain(rootKeyPair, timeSlot, rootCertIssuer);
     var rootCert = jcaKeyPair.getX509Certificate();
-    writeCertToFileBase64Encoded(rootCert, path.resolve("root-cert.cer").toString());
+    writeX509ToFileBase64Encoded(rootCert, path.resolve("root-cert.cer").toString());
     exportKeyPairToKeystoreFile(
         rootKeyPair,
         rootCert,
@@ -143,7 +149,7 @@ public final class BcGeneratorUtil {
             dNSName,
             iPAddress);
     var issuedCert = jcaKeyPair.getX509Certificate();
-    writeCertToFileBase64Encoded(issuedCert, path.resolve("issued-cert.cer").toString());
+    writeX509ToFileBase64Encoded(issuedCert, path.resolve("issued-cert.cer").toString());
     exportKeyPairToKeystoreFile(
         issuedCertKeyPair,
         issuedCert,
@@ -208,7 +214,7 @@ public final class BcGeneratorUtil {
    */
   public static JcaKeyPair generateX509CaChain(
       KeyPair rootKeyPair, TimeSlot timeSlot, X500Name rootCertIssuer)
-      throws NoSuchAlgorithmException, OperatorCreationException, CertIOException,
+      throws NoSuchAlgorithmException, OperatorCreationException, IOException,
           CertificateException {
 
     // First step is to create a root certificate
@@ -219,7 +225,7 @@ public final class BcGeneratorUtil {
 
     // Issued By and Issued To same for root certificate
     ContentSigner rootCertContentSigner =
-        new JcaContentSignerBuilder(CertGeneratorParameter.SHA_256_WITH_RSA)
+        new JcaContentSignerBuilder(CertGeneratorParameter.SHA_1_WITH_RSA)
             .setProvider(CertGeneratorParameter.PROVIDER_NAME)
             .build(rootKeyPair.getPrivate());
     X509v3CertificateBuilder rootCertBuilder =
@@ -234,7 +240,11 @@ public final class BcGeneratorUtil {
     // Add Extensions
     // A BasicConstraint to mark root certificate as CA certificate
     JcaX509ExtensionUtils rootCertExtUtils = new JcaX509ExtensionUtils();
-    rootCertBuilder.addExtension(Extension.basicConstraints, true, new BasicConstraints(true));
+    // some cert path analysers will reject a v3 certificate as a CA if it doesn't have basic
+    // contains set.
+    rootCertBuilder.addExtension(
+        Extension.basicConstraints, true, new BasicConstraints(true).getEncoded());
+
     rootCertBuilder.addExtension(
         Extension.subjectKeyIdentifier,
         false,
@@ -258,8 +268,8 @@ public final class BcGeneratorUtil {
       TimeSlot timeSlot,
       String dNSName,
       String iPAddress)
-      throws OperatorCreationException, NoSuchAlgorithmException, CertIOException,
-          CertificateException, SignatureException, InvalidKeyException, NoSuchProviderException {
+      throws OperatorCreationException, NoSuchAlgorithmException, IOException, CertificateException,
+          SignatureException, InvalidKeyException, NoSuchProviderException {
     // Generate a new KeyPair and sign it using the Root Cert Private Key
     // by generating a CSR (Certificate Signing Request)
     BigInteger issuedCertSerialNum = new BigInteger(Long.toString(new SecureRandom().nextLong()));
@@ -267,7 +277,7 @@ public final class BcGeneratorUtil {
     PKCS10CertificationRequestBuilder p10Builder =
         new JcaPKCS10CertificationRequestBuilder(issuedCertSubject, issuedCertKeyPair.getPublic());
     JcaContentSignerBuilder csrBuilder =
-        new JcaContentSignerBuilder(CertGeneratorParameter.SHA_256_WITH_RSA)
+        new JcaContentSignerBuilder(CertGeneratorParameter.SHA_1_WITH_RSA)
             .setProvider(CertGeneratorParameter.PROVIDER_NAME);
 
     // Sign the new KeyPair with the root cert Private Key
@@ -290,7 +300,8 @@ public final class BcGeneratorUtil {
 
     // Add Extensions
     // Use BasicConstraints to say that this Cert is not a CA
-    issuedCertBuilder.addExtension(Extension.basicConstraints, true, new BasicConstraints(false));
+    issuedCertBuilder.addExtension(
+        Extension.basicConstraints, true, new BasicConstraints(false).getEncoded());
 
     // Add Issuer cert identifier as Extension
     issuedCertBuilder.addExtension(
@@ -303,8 +314,9 @@ public final class BcGeneratorUtil {
         issuedCertExtUtils.createSubjectKeyIdentifier(csr.getSubjectPublicKeyInfo()));
 
     // Add intended key usage extension if needed
+    // NOTE: Only usage for digital signature since X509v3 protocol default
     issuedCertBuilder.addExtension(
-        Extension.keyUsage, false, new KeyUsage(KeyUsage.keyEncipherment));
+        Extension.keyUsage, false, new KeyUsage(KeyUsage.digitalSignature));
 
     // Add DNS name is cert is to used for SSL
     issuedCertBuilder.addExtension(
@@ -343,13 +355,49 @@ public final class BcGeneratorUtil {
     }
   }
 
-  private static void writeCertToFileBase64Encoded(
+  public static void writeCertToFileBase64Encoded(final Certificate certificate, String fileName)
+      throws IOException, CertificateException {
+    try (FileOutputStream certificateOut = new FileOutputStream(fileName)) {
+      X509Certificate[] x509Certificates = bcCertToX509Certs(certificate);
+      for (X509Certificate x509Certificate : x509Certificates) {
+        certificateOut.write("-----BEGIN CERTIFICATE-----\n".getBytes());
+        certificateOut.write(Base64.encode(x509Certificate.getEncoded()));
+        certificateOut.write("\n-----END CERTIFICATE-----".getBytes());
+      }
+    }
+  }
+
+  public static void writeX509ToFileBase64Encoded(
       final X509Certificate certificate, String fileName)
       throws IOException, CertificateEncodingException {
     try (FileOutputStream certificateOut = new FileOutputStream(fileName)) {
-      certificateOut.write("-----BEGIN CERTIFICATE-----".getBytes());
+      certificateOut.write("-----BEGIN CERTIFICATE-----\n".getBytes());
       certificateOut.write(Base64.encode(certificate.getEncoded()));
-      certificateOut.write("-----END CERTIFICATE-----".getBytes());
+      certificateOut.write("\n-----END CERTIFICATE-----".getBytes());
+    }
+  }
+
+  public static void writePasswordToFile(final String storePass, String fileName)
+      throws IOException {
+    try (FileOutputStream passOut = new FileOutputStream(fileName)) {
+      passOut.write(storePass.getBytes(StandardCharsets.UTF_8));
+    }
+  }
+
+  public static void writeAsymmetricKeyParameterToFile(
+      final AsymmetricKeyParameter privateKey, String fileName, String storePass)
+      throws IOException, OperatorCreationException {
+    try (FileOutputStream privateKeyOut = new FileOutputStream(fileName)) {
+      try (JcaPEMWriter writer = new JcaPEMWriter(new PrintWriter(privateKeyOut))) {
+        PrivateKeyInfo privateKeyInfo = PrivateKeyInfoFactory.createPrivateKeyInfo(privateKey);
+        OutputEncryptor outputEncryptor =
+            new JceOpenSSLPKCS8EncryptorBuilder(PKCS8Generator.AES_256_CBC)
+                .setProvider(BouncyCastleProvider.PROVIDER_NAME)
+                .setPassword(storePass.toCharArray())
+                .build();
+        PemObjectGenerator pemObjectGenerator = new PKCS8Generator(privateKeyInfo, outputEncryptor);
+        writer.writeObject(pemObjectGenerator);
+      }
     }
   }
 
@@ -424,7 +472,7 @@ public final class BcGeneratorUtil {
   private static class CertGeneratorParameter {
     private static final String PROVIDER_NAME = BouncyCastleProvider.PROVIDER_NAME;
     private static final String ALGORITHM = "RSA";
-    private static final String SHA_256_WITH_RSA = "SHA256withRSA";
+    private static final String SHA_1_WITH_RSA = "SHA1withRSA";
     private static final int KEY_SIZE = 2048;
   }
 }
