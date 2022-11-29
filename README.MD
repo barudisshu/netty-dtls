@@ -19,8 +19,8 @@ openssl req -new -x509 -nodes -days 365000 -key ca.key -out ca.crt -subj "/C=cn/
 3. Generate the private key and certificate request for the server and client:
 
 ```shell
-openssl req -newkey rsa:2048 -nodes -days 365000 -keyout server.key -out server.csr -subj "/C=cn/ST=Guangdong/L=Guangzhou/O=Cplier, Inc./OU=cplier/CN=server.cplier.com/emailAddress=galudisu@cplier.com"
-openssl req -newkey rsa:2048 -nodes -days 365000 -keyout client.key -out client.csr -subj "/C=cn/ST=Guangdong/L=Guangzhou/O=Cplier, Inc./OU=cplier/CN=client.cplier.com/emailAddress=galudisu@cplier.com"
+openssl req -newkey rsa:2048 -nodes -days 365000 -keyout server.key -out server.csr -subj "/C=cn/ST=Guangdong/L=Guangzhou/O=Cplier, Inc./OU=cplier/CN=127.0.0.1/emailAddress=galudisu@cplier.com"
+openssl req -newkey rsa:2048 -nodes -days 365000 -keyout client.key -out client.csr -subj "/C=cn/ST=Guangdong/L=Guangzhou/O=Cplier, Inc./OU=cplier/CN=127.0.0.1/emailAddress=galudisu@cplier.com"
 ```
 
 NOTE: subject must be difference with CA.
